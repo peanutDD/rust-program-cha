@@ -1,0 +1,98 @@
+[workspace]
+members = [
+    # 01-fundamentals
+    "01-fundamentals/basic-concepts",
+    "01-fundamentals/basic-type",
+    "01-fundamentals/characters-booleans-unit-type",
+    "01-fundamentals/closure",
+    "01-fundamentals/function",
+    "01-fundamentals/statements-expressions",
+    
+    # 02-ownership-borrowing
+    "02-ownership-borrowing/ownership",
+    "02-ownership-borrowing/reference-borrowing",
+    
+    # 03-data-structures
+    "03-data-structures/composite-type/string-slice",
+    "03-data-structures/composite-type/tuple",
+    "03-data-structures/composite-type/structure",
+    "03-data-structures/composite-type/enumeration",
+    "03-data-structures/composite-type/array",
+    "03-data-structures/composite-type/process-control",
+    "03-data-structures/composite-type/match-iflet",
+    "03-data-structures/pattern-matching/deconstructing-option",
+    "03-data-structures/pattern-matching/full-pattern-list",
+    "03-data-structures/method",
+    
+    # 04-advanced-concepts
+    "04-advanced-concepts/generics-traits/generics",
+    "04-advanced-concepts/generics-traits/trait-sample",
+    "04-advanced-concepts/generics-traits/trait-object",
+    "04-advanced-concepts/deep-trait",
+    "04-advanced-concepts/collections/dynamic-array-vector",
+    "04-advanced-concepts/collections/kv-storage-hashMap",
+    "04-advanced-concepts/lifetime",
+    "04-advanced-concepts/returnValues-errorHandling/result",
+    "04-advanced-concepts/crate-package/crate-sample",
+    "04-advanced-concepts/crate-package/module-sample",
+    "04-advanced-concepts/crate-package/use-module",
+    "04-advanced-concepts/comments-documentation",
+    "04-advanced-concepts/formatted-output",
+    "04-advanced-concepts/advanced-lifetime",
+    "04-advanced-concepts/functional-programming/Closure",
+    "04-advanced-concepts/functional-programming/Iterator",
+    "04-advanced-concepts/type-system/type-conversion",
+    "04-advanced-concepts/type-system/newType-typeAlias",
+    "04-advanced-concepts/type-system/Sized-DST",
+    "04-advanced-concepts/type-system/enum-int",
+    "04-advanced-concepts/global-variables/globalVariable",
+    "04-advanced-concepts/error-handling",
+    "04-advanced-concepts/macro-programming",
+    
+    # 05-concurrency-async
+    "05-concurrency-async/multithreading/message-passing",
+    "05-concurrency-async/multithreading/Lock-Condvar-Semaphore",
+    "05-concurrency-async/multithreading/AtomicTypes-MemoryOrder",
+    "05-concurrency-async/async-programming/Async",
+    "05-concurrency-async/async-programming/Pin-Unpin",
+    "05-concurrency-async/async-programming/multipleFutures",
+    
+    # 06-memory-management
+    "06-memory-management/smart-pointers/Box-T",
+    "06-memory-management/smart-pointers/Deref",
+    "06-memory-management/smart-pointers/Drop",
+    "06-memory-management/smart-pointers/Rc-Arc",
+    "06-memory-management/smart-pointers/Cell-RefCell",
+    "06-memory-management/unsafe-rust/unsafe-rust",
+    "06-memory-management/unsafe-rust/unsafe-superpowers",
+    "06-memory-management/unsafe-rust/inline-assembly",
+    
+    # 07-performance-optimization
+    "07-performance-optimization/slices-slice-references",
+    "07-performance-optimization/scope-lifetime-nll",
+    "07-performance-optimization/eq-partial-eq",
+    "07-performance-optimization/move-copy-clone", "docs/rust-difficulty-examples",
+]
+resolver = "2"
+
+# Workspace-level profile configurations
+[profile.dev]
+opt-level = 0
+debug = true
+incremental = true
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[profile.test]
+opt-level = 1
+debug = true
+
+[profile.bench]
+opt-level = 3
+lto = true
+codegen-units = 1
+debug = false

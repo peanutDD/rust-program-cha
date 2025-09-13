@@ -1,0 +1,32 @@
+# Rust 编译输出
+/target/
+**/target/
+Cargo.lock
+
+# IDE 文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# rust-analyzer 缓存
+.rust-analyzer/
+
+# 临时文件
+*.tmp
+*.temp
+
+# 日志文件
+*.log
+
+# 性能分析文件
+*.prof
+perf.data*
+
+# 基准测试结果
+/benches/target/

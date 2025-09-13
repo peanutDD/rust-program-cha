@@ -1,0 +1,13 @@
+[build]
+# 减少并行编译任务数以降低内存使用
+jobs = 2
+
+[target.x86_64-apple-darwin]
+# 针对 macOS 的优化
+rustflags = ["-C", "link-arg=-Wl,-dead_strip"]
+
+[source.crates-io]
+replace-with = "ustc"
+
+[source.ustc]
+registry = "https://mirrors.ustc.edu.cn/crates.io-index/"

@@ -1,0 +1,40 @@
+[package]
+name = "scope-lifetime-nll"
+version = "0.1.0"
+edition = "2021"
+authors = ["Rust Learning Project"]
+description = "深入解析 Rust 中的作用域、生命周期和 NLL"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/rust-learning/scope-lifetime-nll"
+keywords = ["rust", "lifetime", "scope", "nll", "borrow-checker"]
+categories = ["development-tools", "education"]
+
+# 移除 workspace 配置，因为这是工作空间成员项目
+# [workspace] 配置会与父工作空间产生冲突
+
+[dependencies]
+# 用于性能测试和基准测试
+criterion = { version = "0.5", features = ["html_reports"] }
+# 用于序列化示例
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# 用于异步示例
+tokio = { version = "1.0", features = ["full"] }
+# 用于内存分析
+memory-stats = "1.0"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "scope_lifetime_benchmarks"
+harness = false
+
+[lib]
+name = "scope_lifetime_nll"
+path = "src/lib.rs"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"

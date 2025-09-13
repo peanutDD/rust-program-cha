@@ -1,0 +1,28 @@
+[package]
+name = "eq-partialeq-analysis"
+version = "0.1.0"
+edition = "2021"
+
+# 移除 workspace 配置，因为这是工作空间成员项目
+authors = ["Rust Learning Project"]
+description = "深度解析 Rust 中 Eq 和 PartialEq trait 的区别与应用"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+rand = "0.8"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+# 只保留主程序入口
+# 其他模块通过 main.rs 调用
+
+[[bench]]
+name = "eq_partialeq_bench"
+harness = false
+path = "benches/eq_partialeq_bench.rs"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
