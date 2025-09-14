@@ -1,0 +1,6 @@
+[package]
+name = "Thread-safety-based-on-Send-and-Sync"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]

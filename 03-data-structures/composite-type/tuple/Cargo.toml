@@ -1,0 +1,16 @@
+[package]
+name = "rust-tuple-tutorial"
+version = "0.1.0"
+edition = "2021"
+authors = ["Rust 学习者"]
+description = "一个全面的 Rust 元组学习教程和练习项目"
+license = "MIT"
+keywords = ["rust", "tuple", "tutorial", "learning", "education"]
+categories = ["development-tools", "education"]
+
+[dependencies]
+# 目前不需要外部依赖，使用标准库即可
+
+[[bin]]
+name = "main"
+path = "src/main.rs"

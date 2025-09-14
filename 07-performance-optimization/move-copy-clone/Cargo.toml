@@ -1,0 +1,37 @@
+[package]
+name = "move-copy-clone"
+version = "0.1.0"
+edition = "2021"
+authors = ["Rust Learning Project"]
+description = "深入解析 Rust 中 Move、Copy 和 Clone 的区别与应用"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/rust-learning/move-copy-clone"
+keywords = ["rust", "move", "copy", "clone", "ownership"]
+categories = ["development-tools", "education"]
+
+[dependencies]
+# 用于性能测试和基准测试
+criterion = { version = "0.5", features = ["html_reports"] }
+# 用于序列化示例
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# 用于内存分析
+memory-stats = "1.0"
+# 用于随机数生成
+rand = "0.8"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "performance_bench"
+harness = false
+
+[lib]
+name = "move_copy_clone"
+path = "src/lib.rs"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"

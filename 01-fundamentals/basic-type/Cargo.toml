@@ -1,0 +1,10 @@
+[package]
+name = "basic-type"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[[bin]]
+name = "numbers"
+path = "src/numbers.rs"

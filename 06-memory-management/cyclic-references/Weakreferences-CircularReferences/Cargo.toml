@@ -1,0 +1,13 @@
+[package]
+name = "weakreferences-circularreferences"
+version = "0.1.0"
+edition = "2021"
+authors = ["Rust Course Tutorial"]
+description = "深入分析 Rust 中的弱引用(Weak)与循环引用问题的完整教程"
+license = "MIT"
+keywords = ["rust", "weak", "circular-reference", "memory-management", "smart-pointers"]
+categories = ["development-tools", "memory-management"]
+repository = "https://github.com/rust-course/rust-program-cha"
+readme = "README.md"
+
+[dependencies]

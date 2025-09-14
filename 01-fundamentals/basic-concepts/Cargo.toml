@@ -1,0 +1,32 @@
+[package]
+name = "first"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[[bin]]
+name = "optimized_main"
+path = "src/optimized_main.rs"
+
+[[bin]]
+name = "refactored_main"
+path = "src/refactored_main.rs"
+
+[[bin]]
+name = "enterprise_main"
+path = "src/enterprise_main.rs"
+
+[[bin]]
+name = "rust_concepts_examples"
+path = "rust_concepts_examples.rs"
+
+[[bin]]
+name = "rust_exercises"
+path = "rust_exercises.rs"
+
+
+
+[dependencies]

@@ -1,0 +1,48 @@
+[package]
+name = "closure-tutorial"
+version = "0.1.0"
+edition = "2021"
+authors = ["Rust Course Contributors"]
+description = "Rust 闭包深度解析教程库 - 全面学习 Rust 闭包的所有特性"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/sunface/rust-course"
+homepage = "https://course.rs/advance/functional-programing/closure.html"
+documentation = "https://docs.rs/closure-tutorial"
+readme = "README.md"
+keywords = ["rust", "closure", "functional-programming", "tutorial", "教程"]
+categories = ["development-tools", "tutorial"]
+
+[lib]
+name = "closure_tutorial"
+path = "src/lib.rs"
+doc = true
+
+[[bin]]
+name = "closure-demo"
+path = "src/main.rs"
+doc = false
+
+[dependencies]
+# 目前不需要外部依赖，所有功能都使用标准库实现
+
+[dev-dependencies]
+# 用于基准测试和示例的依赖
+# criterion = "0.5"  # 暂时禁用以提高性能
+
+[features]
+default = []
+# 启用所有功能
+full = []
+
+# 暂时禁用基准测试以提高 rust-analyzer 性能
+# [[bench]]
+# name = "closure_performance"
+# harness = false
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+# 注意：此项目是父工作空间的成员，不需要自己的 [workspace] 配置
+
+# Profile configurations moved to workspace root
