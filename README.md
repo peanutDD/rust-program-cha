@@ -54,28 +54,69 @@ cargo run --example <example-name>
 - **[Rust 学习路线图](./docs/rust-learning-roadmap.md)** - 学习路径规划
 - **[Rust 难点总结](./docs/rust-difficulty-summary.md)** - 常见难点和解决方案
 - **[API 学习路线图](./docs/api-learning-roadmap.md)** - API 使用指南
+- **[Rust 性能优化全面指南](./rust_performance_optimization_guide.md)** - 全面的性能优化技术总结
 
 ## 🛠️ 工具和配置
 
 - **[工具脚本](./tools/)** - 开发辅助工具
 - **[Rust 工具链配置](./rust-toolchain.toml)** - 项目工具链版本
 - **[Cargo 配置](./Cargo.toml)** - 项目依赖和配置
+- **[Cargo 本地配置](./.cargo/config.toml)** - 本地开发环境配置
 
 ## 📁 项目结构概览
 
 ```
 rust-program-cha/
-├── 01-fundamentals/          # 基础概念
+├── 01-fundamentals/           # 基础概念
+│   ├── basic-concepts/        # 基础语法概念
+│   ├── basic-type/            # 基本数据类型
+│   ├── characters-booleans-unit-type/ # 字符、布尔和单元类型
+│   ├── closure/               # 闭包
+│   ├── function/              # 函数
+│   └── statements-expressions/ # 语句与表达式
 ├── 02-ownership-borrowing/    # 所有权与借用
+│   ├── ownership/             # 所有权
+│   └── reference-borrowing/   # 引用与借用
 ├── 03-data-structures/        # 数据结构
+│   ├── composite-type/        # 复合类型
+│   ├── method/                # 方法
+│   └── pattern-matching/      # 模式匹配
 ├── 04-advanced-concepts/      # 高级概念
+│   ├── advanced-lifetime/     # 高级生命周期
+│   ├── collections/           # 集合类型
+│   ├── comments-documentation/ # 注释与文档
+│   ├── crate-package/         # 包与模块
+│   ├── deep-trait/            # Trait深入
+│   ├── error-handling/        # 错误处理
+│   ├── formatted-output/      # 格式化输出
+│   ├── functional-programming/ # 函数式编程
+│   ├── generics-traits/       # 泛型与Trait
+│   ├── global-variables/      # 全局变量
+│   ├── lifetime/              # 生命周期
+│   ├── macro-programming/     # 宏编程
+│   ├── returnValues-errorHandling/ # 返回值与错误处理
+│   └── type-system/           # 类型系统
 ├── 05-concurrency-async/      # 并发与异步
+│   ├── async-programming/     # 异步编程
+│   └── multithreading/        # 多线程
 ├── 06-memory-management/      # 内存管理
+│   ├── cyclic-references/     # 循环引用
+│   ├── smart-pointers/        # 智能指针
+│   └── unsafe-rust/           # 不安全Rust
 ├── 07-performance-optimization/ # 性能优化
-├── 08-practical-examples/     # 实际应用示例
-├── docs/                     # 文档资源
-├── tools/                    # 工具脚本
-└── archived/                 # 归档内容
+│   ├── eq-partial-eq/         # 相等性比较
+│   ├── move-copy-clone/       # 移动、复制与克隆
+│   ├── raw-pointers-references-smart-pointers/ # 指针比较
+│   ├── scope-lifetime-nll/    # 作用域与生命周期
+│   └── slices-slice-references/ # 切片与切片引用
+├── 08-practical-examples/     # 实际应用
+│   └── embedded-development/  # 嵌入式开发
+├── docs/                      # 文档资源
+├── tools/                     # 工具脚本
+├── .cargo/                    # Cargo配置
+├── Cargo.toml                 # 项目依赖配置
+├── rust-toolchain.toml        # Rust工具链配置
+├── rust_performance_optimization_guide.md # Rust性能优化全面指南
 ```
 
 ## 🎯 学习目标
