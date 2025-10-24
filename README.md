@@ -62,6 +62,7 @@ cargo run --example <example-name>
 - **[Rust 工具链配置](./rust-toolchain.toml)** - 项目工具链版本
 - **[Cargo 配置](./Cargo.toml)** - 项目依赖和配置
 - **[Cargo 本地配置](./.cargo/config.toml)** - 本地开发环境配置
+- **[Mise 版本管理](./docs/mise-setup-guide.md)** - 版本管理器配置指南
 
 ## 📁 项目结构概览
 
