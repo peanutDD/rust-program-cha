@@ -3,8 +3,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-// 导入我们的宏库
+// 导入我们的宏库和必要的类型
 use response_macro::{Response, response, error};
+use response_macro::{ResponseData};
 
 // 定义错误类型
 #[derive(Debug)]
@@ -39,13 +40,9 @@ struct ApiResponse<T> {
     code: u16,
 }
 
-// 为ApiResponse实现Deref，使其能访问内部的数据
-impl<T> std::ops::Deref for ApiResponse<T> {
-    type Target = T;
-    
-    fn deref(&self) -> &Self::Target {
-        &self.data
-    }
+// 为ApiResponse实现ResponseData特性，用于提取响应数据类型
+impl<T> ResponseData for ApiResponse<T> {
+    type Data = T;
 }
 
 // 定义用户结构体
