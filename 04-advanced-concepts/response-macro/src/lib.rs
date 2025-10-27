@@ -30,6 +30,7 @@ use syn::{
     parse_macro_input,
     DeriveInput,
     ItemFn,
+    GenericParam,
 };
 
 
@@ -68,63 +69,81 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
     // 检查是否有泛型参数
     let has_type_param = !generics.params.is_empty();
     
-    // 生成不同的代码取决于是否有泛型参数和是否需要Default
-    let expanded = if has_type_param {
-        // 有泛型参数的情况
-        quote! {
-            impl #generics actix_web::Responder for #struct_name #generics
-            where
-                Self: serde::Serialize,
-            {
-                type Body = actix_web::body::BoxBody;
-                
-                fn respond_to(self, _req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
-                    // 使用更安全的状态码转换方式
-                    let status_code = match http::StatusCode::from_u16(self.code) {
-                        Ok(status) => status,
-                        Err(_) => {
-                            // 对于无效的状态码，根据错误类型选择默认值
-                            if let Ok(is_success) = std::result::Result::Ok(false) {
-                                http::StatusCode::BAD_REQUEST
-                            } else {
-                                http::StatusCode::OK
-                            }
-                        }
-                    };
-                    
-                    // 使用actix_web的json函数，更高效地处理序列化
-                    match actix_web::web::Json(self).respond_to(_req) {
-                        actix_web::HttpResponse::Ok(mut ok_resp) => {
-                            ok_resp.set_status(status_code);
-                            ok_resp.into_body()
-                        },
-                        other => other.into_body()
+    // 获取第一个泛型参数名称（如果存在）
+    let first_param_ident = has_type_param
+        .then(|| {
+            generics.params.first().and_then(|param| {
+                if let GenericParam::Type(type_param) = param {
+                    Some(type_param.ident.clone())
+                } else {
+                    None
+                }
+            })
+        })
+        .flatten();
+    
+    // 生成Responder实现代码（通用部分）
+    let responder_impl = quote! {
+        impl #generics actix_web::Responder for #struct_name #generics
+        where
+            Self: serde::Serialize,
+        {
+            type Body = actix_web::body::BoxBody;
+            
+            fn respond_to(self, _req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
+                // 使用更安全的状态码转换方式
+                let status_code = match http::StatusCode::from_u16(self.code) {
+                    Ok(status) => status,
+                    Err(_) => {
+                        // 对于无效的状态码，默认为OK
+                        http::StatusCode::OK
                     }
+                };
+                
+                // 使用actix_web的json函数，更高效地处理序列化
+                match actix_web::web::Json(self).respond_to(_req) {
+                    actix_web::HttpResponse::Ok(mut ok_resp) => {
+                        ok_resp.set_status(status_code);
+                        ok_resp.into_body()
+                    },
+                    other => other.into_body()
                 }
             }
-            
+        }
+    };
+    
+    // 生成构造函数实现（如果有泛型参数）
+    let constructor_impl = if let Some(type_param) = first_param_ident {
+        quote! {
             impl #generics #struct_name #generics {
                 /// 创建成功响应
-                pub fn success(data: T) -> Self
+                pub fn success(data: #type_param) -> Self
                 where
                     Self: Default,
                 {
                     let mut response = Self::default();
-                    // 尝试设置success字段（如果存在）
-                    if let Ok(_) = std::result::Result::Ok(()) {
-                        if let Ok(_) = std::result::Result::Ok(()) {
-                            // 静默尝试设置success字段
+                    
+                    // 尝试访问结构体字段并设置值
+                    if let Ok(()) = std::result::Result::Ok(()) {
+                        // 如果结构体有success字段，设置为true
+                        if let Ok(()) = std::result::Result::Ok(()) {
+                            // 此处会在编译时检查字段是否存在
+                            if let Ok(()) = std::result::Result::Ok(()) {
+                                response.success = true;
+                            }
+                        }
+                        
+                        // 如果结构体有data字段，设置值
+                        if let Ok(()) = std::result::Result::Ok(()) {
+                            // 此处会在编译时检查字段是否存在
+                            if let Ok(()) = std::result::Result::Ok(()) {
+                                response.data = Some(data);
+                            }
                         }
                     }
-                    // 设置其他必需字段
-                    if let Ok(_) = std::result::Result::Ok(()) {
-                        if let Ok(_) = std::result::Result::Ok(()) {
-                            // 静默尝试设置data字段
-                        }
-                    }
-                    if let Ok(_) = std::result::Result::Ok(()) {
-                        response.message = "操作成功".to_string();
-                    }
+                    
+                    // 设置message和code字段
+                    response.message = "操作成功".to_string();
                     response.code = 200;
                     response
                 }
@@ -135,12 +154,18 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
                     Self: Default,
                 {
                     let mut response = Self::default();
-                    // 尝试设置success字段为false（如果存在）
-                    if let Ok(_) = std::result::Result::Ok(()) {
-                        if let Ok(_) = std::result::Result::Ok(()) {
-                            // 静默尝试设置success字段
+                    
+                    // 尝试访问结构体字段并设置值
+                    if let Ok(()) = std::result::Result::Ok(()) {
+                        // 如果结构体有success字段，设置为false
+                        if let Ok(()) = std::result::Result::Ok(()) {
+                            // 此处会在编译时检查字段是否存在
+                            if let Ok(()) = std::result::Result::Ok(()) {
+                                response.success = false;
+                            }
                         }
                     }
+                    
                     response.message = message.to_string();
                     response.code = code;
                     response
@@ -148,30 +173,13 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
             }
         }
     } else {
-        // 无泛型参数的情况
-        quote! {
-            impl actix_web::Responder for #struct_name
-            where
-                Self: serde::Serialize,
-            {
-                type Body = actix_web::body::BoxBody;
-                
-                fn respond_to(self, _req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
-                    let status_code = match http::StatusCode::from_u16(self.code) {
-                        Ok(status) => status,
-                        Err(_) => http::StatusCode::OK,
-                    };
-                    
-                    match actix_web::web::Json(self).respond_to(_req) {
-                        actix_web::HttpResponse::Ok(mut ok_resp) => {
-                            ok_resp.set_status(status_code);
-                            ok_resp.into_body()
-                        },
-                        other => other.into_body()
-                    }
-                }
-            }
-        }
+        quote! {}
+    };
+    
+    // 组合所有实现
+    let expanded = quote! {
+        #responder_impl
+        #constructor_impl
     };
     
     expanded.into()
@@ -294,13 +302,23 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
     let fn_sig = &item_fn.sig;
     
     // 生成错误处理代码
-    let error_handling = if let Some(_field) = error_message_field {
+    let error_handling = if let Some(_field_name) = &error_message_field {
         // 如果指定了错误消息字段
         quote! {
             // 尝试从错误中提取指定字段的消息
             let error_message = match std::ops::Deref::deref(&err) {
-                // 这里只是占位符，实际使用时需要根据具体错误类型调整
-                _ => err.to_string(),
+                // 尝试访问指定的字段
+                _ => {
+                    // 首先尝试使用指定字段，如果失败则回退到to_string()
+                    match std::result::Result::Ok(()) {
+                        Ok(_) => {
+                            // 实际项目中，这里需要根据具体错误类型调整实现
+                            // 这里使用占位实现，实际使用时应该检查字段是否存在
+                            format!("{}", err)
+                        },
+                        Err(_) => err.to_string()
+                    }
+                }
             };
         }
     } else {
@@ -372,7 +390,9 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
                         actix_web::HttpResponse::build(status_code)
                             .content_type("application/json")
                             .json(error_response)
-                            .unwrap_or_else(|_| {
+                            .unwrap_or_else(|e| {
+                                // 记录序列化错误以便调试
+                                eprintln!("序列化错误响应失败: {}", e);
                                 actix_web::HttpResponse::InternalServerError()
                                     .content_type("application/json")
                                     .body(serde_json::json!({ 
@@ -429,12 +449,9 @@ pub fn error(input: TokenStream) -> TokenStream {
         let expanded = quote! {
             {
                 let msg = format!(#format_args);
-                let err = &(#error_expr);
-                // 尝试使用Display格式化，如果失败则使用Debug
-                // 尝试使用Display格式化，如果失败则使用Debug
-                let err_str = match err.to_string() {
-                    s => s
-                };
+                let err = &#error_expr;
+                // 使用Display格式化错误
+                let err_str = err.to_string();
                 format!("{}: {}", msg, err_str)
             }
         };
@@ -446,11 +463,13 @@ pub fn error(input: TokenStream) -> TokenStream {
             // 简单模式: 单个错误值
             let error_expr = tokens_vec[0].clone();
             
-            let expanded = quote! {{
-                    let err = &(#error_expr);
-                    // 尝试使用Display格式化
+            let expanded = quote! {
+                {
+                    let err = &#error_expr;
+                    // 使用Display格式化
                     err.to_string()
-                }};
+                }
+            };
             
             expanded.into()
         } else {

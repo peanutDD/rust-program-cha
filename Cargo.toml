@@ -71,7 +71,7 @@ members = [
     "07-performance-optimization/slices-slice-references",
     "07-performance-optimization/scope-lifetime-nll",
     "07-performance-optimization/eq-partial-eq",
-    "07-performance-optimization/move-copy-clone", "docs/rust-difficulty-examples", "04-advanced-concepts/response-macro", "04-advanced-concepts/response-macro-example",
+    "07-performance-optimization/move-copy-clone", "docs/rust-difficulty-examples", "04-advanced-concepts/response-macro", "04-advanced-concepts/response-macro-example", "04-advanced-concepts/response-macro-advanced",
 ]
 resolver = "2"
 
