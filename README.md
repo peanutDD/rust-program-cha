@@ -1,20 +1,44 @@
 # Rust 学习项目 (rust-program-cha)
 
-系统性 Rust 编程语言学习项目，主题导向目录结构，从基础到高级特性的完整学习路径。
+<p align="center">
+  <a href="https://github.com/tyone/rust-program-cha"><img src="https://img.shields.io/github/stars/tyone/rust-program-cha?style=social" alt="GitHub stars"></a>
+  <a href="https://github.com/tyone/rust-program-cha"><img src="https://img.shields.io/github/forks/tyone/rust-program-cha?style=social" alt="GitHub forks"></a>
+  <a href="https://github.com/tyone/rust-program-cha"><img src="https://img.shields.io/github/issues/tyone/rust-program-cha" alt="GitHub issues"></a>
+  <a href="https://github.com/tyone/rust-program-cha/blob/main/LICENSE"><img src="https://img.shields.io/github/license/tyone/rust-program-cha" alt="License"></a>
+  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/rust-stable-blue" alt="Rust stable"></a>
+</p>
+
+<p align="center">系统性 Rust 编程语言学习项目，采用主题导向目录结构，提供从基础到高级特性的完整学习路径和实践示例。</p>
 
 ## 🚀 快速开始
 
+### 环境要求
+
+- **操作系统**: Windows, macOS, Linux
+- **Rust 版本**: 稳定版 (stable)
+- **工具链**: 通过 rustup 管理
+
+### 安装步骤
+
 ```bash
-# 克隆项目
-git clone <repository-url>
+# 1. 克隆项目
+git clone https://github.com/tyone/rust-program-cha.git
 cd rust-program-cha
 
-# 安装 Rust
+# 2. 安装 Rust (如果尚未安装)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# 构建和运行
+# 3. 验证安装
+rustc --version
+cargo --version
+
+# 4. 构建和运行特定示例
 cargo build
 cargo run --example <example-name>
+
+# 5. 运行特定子项目
+cd 01-fundamentals/basic-concepts
+cargo run
 ```
 
 ## 📚 学习路径
@@ -22,45 +46,53 @@ cargo run --example <example-name>
 ### 推荐学习顺序
 
 1. **[01-fundamentals](./01-fundamentals/)** - 基础概念
-   - 语法、数据类型、函数、闭包
+   - 掌握 Rust 基础语法、数据类型系统、函数定义和闭包使用
+   - 学习 Rust 的语句和表达式区别，构建基础编程能力
 
 2. **[02-ownership-borrowing](./02-ownership-borrowing/)** - 所有权与借用
-   - 所有权、借用、生命周期
+   - 理解 Rust 独特的所有权系统，这是 Rust 内存安全的核心
+   - 掌握借用规则和生命周期概念，避免常见的内存错误
 
 3. **[03-data-structures](./03-data-structures/)** - 数据结构
-   - 复合类型、方法、模式匹配
+   - 学习 Rust 复合类型（结构体、枚举、元组）的使用
+   - 掌握模式匹配和流程控制，编写更加优雅的代码
 
 4. **[04-advanced-concepts](./04-advanced-concepts/)** - 高级概念
-   - 泛型、Trait、宏、错误处理
+   - 深入学习泛型、Trait 系统、宏编程和错误处理
+   - 掌握高级生命周期、类型系统和函数式编程特性
 
 5. **[05-concurrency-async](./05-concurrency-async/)** - 并发与异步
-   - 多线程、异步编程
+   - 学习 Rust 多线程编程和消息传递模式
+   - 掌握异步编程基础、Pin-Unpin 特性和多 Future 处理
 
 6. **[06-memory-management](./06-memory-management/)** - 内存管理
-   - 智能指针、Unsafe Rust
+   - 深入理解智能指针（Box、Rc、Arc、Cell、RefCell）
+   - 了解 unsafe Rust 的使用场景和安全边界
 
 7. **[07-performance-optimization](./07-performance-optimization/)** - 性能优化
-   - 移动语义、优化技巧
+   - 学习 Rust 性能优化技巧和最佳实践
+   - 掌握移动语义、复制和克隆的性能影响
 
 8. **[08-practical-examples](./08-practical-examples/)** - 实际应用
-   - 嵌入式开发示例
+   - 通过实际项目学习 Rust 的应用
+   - 了解 Rust 在嵌入式开发等领域的应用场景
 
 ## 📖 文档资源
 
-- **[项目结构说明](./docs/project-structure.md)**
-- **[Rust 学习完整指南](./docs/rust-learning-complete-guide.md)**
-- **[Rust 学习路线图](./docs/rust-learning-roadmap.md)**
-- **[Rust 难点总结](./docs/rust-difficulty-summary.md)**
-- **[API 学习路线图](./docs/api-learning-roadmap.md)**
-- **[Rust 性能优化全面指南](./rust_performance_optimization_guide.md)**
+- **[项目结构说明](./docs/project-structure.md)** - 详细说明项目组织和目录结构
+- **[Rust 学习完整指南](./docs/rust-learning-complete-guide.md)** - 系统化的 Rust 学习方法论
+- **[Rust 学习路线图](./docs/rust-learning-roadmap.md)** - 阶段性学习目标和时间规划
+- **[Rust 难点总结](./docs/rust-difficulty-summary.md)** - 重点难点概念解析和常见问题
+- **[API 学习路线图](./docs/api-learning-roadmap.md)** - Rust 生态系统 API 学习指南
+- **[Rust 性能优化全面指南](./rust_performance_optimization_guide.md)** - 性能调优技巧和最佳实践
 
 ## 🛠️ 工具和配置
 
-- **[工具脚本](./tools/)** - 开发辅助工具
-- **[Rust 工具链配置](./rust-toolchain.toml)** - 版本管理
-- **[Cargo 配置](./Cargo.toml)** - 项目依赖
-- **[Cargo 本地配置](./.cargo/config.toml)** - 开发环境
-- **[Mise 版本管理](./docs/mise-setup-guide.md)** - 配置指南
+- **[工具脚本](./tools/)** - 开发辅助工具和实用脚本
+- **[Rust 工具链配置](./rust-toolchain.toml)** - 项目使用的 Rust 版本规范
+- **[Cargo 配置](./Cargo.toml)** - 主项目依赖和元数据
+- **[Cargo 本地配置](./.cargo/config.toml)** - 开发环境和构建优化配置
+- **[Mise 版本管理](./docs/mise-setup-guide.md)** - 多工具版本管理配置指南
 
 ## 📁 详细项目结构
 
@@ -199,21 +231,64 @@ rust-program-cha/
 - ✅ 性能优化技巧
 - ✅ 实际项目开发经验
 
+## 🌟 项目特点
+
+- **系统化学习路径** - 从基础到高级的渐进式学习体系
+- **实践驱动** - 每个概念都配有实际示例和练习
+- **详细文档** - 丰富的文档资源和学习指南
+- **模块化设计** - 主题明确的目录结构，易于导航和学习
+- **最新工具链** - 基于最新稳定版 Rust 工具链构建
+
 ## 🤝 贡献指南
 
-欢迎提交 Issue 和 Pull Request 改进本项目！
+我们欢迎社区贡献来改进和扩展这个学习项目！
+
+### 贡献方式
+
+1. **报告问题** - 通过 GitHub Issues 报告错误或提出改进建议
+2. **提交代码** - 遵循以下步骤：
+   - Fork 本仓库
+   - 创建功能分支 (`git checkout -b feature/amazing-feature`)
+   - 提交更改 (`git commit -m 'Add some amazing feature'`)
+   - 推送到分支 (`git push origin feature/amazing-feature`)
+   - 打开 Pull Request
+
+### 代码规范
+
+- 遵循 Rust 官方风格指南
+- 确保所有代码通过 `cargo fmt` 和 `cargo clippy` 检查
+- 为新功能添加适当的文档注释
+- 包含测试用例验证功能正确性
 
 ## 📄 许可证
 
-MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
+本项目采用 **MIT 许可证** - 详见 [LICENSE](LICENSE) 文件。
 
 ## 🔗 相关资源
 
-- [Rust 官方文档](https://doc.rust-lang.org/)
-- [Rust 程序设计语言](https://doc.rust-lang.org/book/)
-- [Rust 标准库文档](https://doc.rust-lang.org/std/)
-- [Rust 参考手册](https://doc.rust-lang.org/reference/)
+### 官方文档
+
+- [Rust 官方文档](https://doc.rust-lang.org/) - 全面的 Rust 语言参考
+- [Rust 程序设计语言](https://doc.rust-lang.org/book/) - 官方入门书籍
+- [Rust 标准库文档](https://doc.rust-lang.org/std/) - 标准库 API 参考
+- [Rust 参考手册](https://doc.rust-lang.org/reference/) - 语言技术细节
+
+### 在线学习资源
+
+- [Rust by Example](https://doc.rust-lang.org/rust-by-example/) - 通过示例学习 Rust
+- [Rustlings](https://github.com/rust-lang/rustlings) - 小练习集合
+- [Rust 进阶指南](https://doc.rust-lang.org/nightly/book/second-edition/) - 深度主题讲解
+
+### 社区资源
+
+- [Rust 论坛](https://users.rust-lang.org/) - 官方社区论坛
+- [Rust Discord](https://discord.gg/rust-lang) - 实时讨论社区
+- [Rust 中文社区](https://rustcc.cn/) - 中文资源和讨论
 
 ---
 
 **开始你的 Rust 学习之旅！** 🦀
+
+<p align="center">
+  <i>"Rust: 一门赋予每个人构建可靠且高效软件能力的语言。"</i>
+</p>
