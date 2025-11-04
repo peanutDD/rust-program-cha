@@ -157,6 +157,45 @@ cargo run
 └── type-system/             # 类型系统
 ```
 
+#### 04-advanced-concepts
+
+高级概念模块，包含泛型、trait、生命周期等Rust核心高级特性的示例和实践。
+
+##### response-macro-advanced
+
+一个基于Actix-web的RESTful API服务示例，展示了如何构建具有完善错误处理、分层架构和响应格式化的后端应用。
+
+**主要功能：**
+- 完整的用户管理CRUD操作
+- 批量用户查询功能
+- 用户状态管理（激活/停用）
+- 邮箱唯一性检查
+- 基于角色的权限控制
+- 统一的错误处理和响应格式
+
+**技术栈：**
+- Actix-web：异步Web框架
+- Serde：序列化/反序列化
+- Thiserror：错误处理
+- Arc：线程安全的引用计数
+
+**项目架构：**
+- `models/`：数据模型和DTO定义
+- `handlers/`：HTTP请求处理器
+- `services/`：业务逻辑层
+- `main.rs`：应用程序入口和路由配置
+
+**API端点：**
+- `GET /api/users`：获取用户列表（支持分页和筛选）
+- `POST /api/users`：创建新用户
+- `GET /api/users/{id}`：获取单个用户信息
+- `PUT /api/users/{id}`：更新用户信息
+- `DELETE /api/users/{id}`：删除用户
+- `POST /api/users/batch`：批量获取用户
+- `POST /api/users/{id}/activate`：激活用户
+- `POST /api/users/{id}/deactivate`：停用用户
+- `GET /api/users/check-email`：检查邮箱是否已被使用
+
 #### 5. 并发与异步 (05-concurrency-async/)
 ```
 05-concurrency-async/
