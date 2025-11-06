@@ -22,7 +22,7 @@ async fn health_check(_req: HttpRequest) -> impl Responder {
             "success": true,
             "message": "服务运行正常",
             "code": 200,
-            "data": {"status": "healthy", "timestamp": chrono::Utc::now().to_rfc3339(), "service": "response-macro-advanced", "version": "1.0.0"}
+            "data": {"status": "healthy", "timestamp": chrono::Utc::now().to_rfc3339(), "service": "response-macro-advanced ", "version": "1.0.0"}
         }))
 }
 
