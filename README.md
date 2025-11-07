@@ -8,7 +8,7 @@
   <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/rust-stable-blue" alt="Rust stable"></a>
 </p>
 
-<p align="center">系统性 Rust 编程语言学习项目，采用主题导向目录结构，提供从基础到高级特性的完整学习路径和实践示例。</p>
+<p align="center">系统性 Rust 编程语言学习项目，采用主题导向目录结构，提供从基础到高级特性的完整学习路径和实践示例。包含最新的Rust特性解析、内存安全模型、unsafe Rust使用指南以及性能优化技巧。</p>
 
 ## 🚀 快速开始
 
@@ -67,7 +67,8 @@ cargo run
 
 6. **[06-memory-management](./06-memory-management/)** - 内存管理
    - 深入理解智能指针（Box、Rc、Arc、Cell、RefCell）
-   - 了解 unsafe Rust 的使用场景和安全边界
+   - 掌握 unsafe Rust 的使用场景、安全边界和未定义行为
+   - 学习内存布局、循环引用处理和零成本抽象
 
 7. **[07-performance-optimization](./07-performance-optimization/)** - 性能优化
    - 学习 Rust 性能优化技巧和最佳实践
@@ -286,10 +287,10 @@ cargo run
 **重点子模块：**
 
 ##### smart-pointers
-详细介绍Rust的各种智能指针类型，包括Box<T>、Rc/Arc、Cell/RefCell等，以及它们的适用场景和使用方法。
+详细介绍Rust的各种智能指针类型，包括Box<T>、Rc/Arc、Cell/RefCell等，以及它们的适用场景、内存语义和使用方法。
 
 ##### unsafe-rust
-讲解unsafe Rust的概念、语法和使用场景，说明何时需要突破安全边界以及如何安全地使用unsafe代码。
+深入讲解unsafe Rust的概念、语法和使用场景，包括五种unsafe超能力（原始指针解引用、调用unsafe函数、访问可变静态变量、实现unsafe trait、访问union字段）。详细说明未定义行为的危险性和避免方法，以及如何安全地使用unsafe代码构建抽象接口。
 
 ##### cyclic-references
 分析Rust中循环引用的问题及解决方案，包括使用Weak指针和设计模式等方法。
@@ -375,6 +376,7 @@ rust-program-cha/
 - **并发与异步**：掌握Rust的并发模型、线程安全和现代异步编程模式
 - **系统编程**：学习使用Rust进行底层系统级编程和硬件交互
 - **Web开发**：使用Rust开发高性能的Web应用和API服务
+- **内存安全**：深入理解Rust的内存安全保证和未定义行为的边界
 
 ### 质量保证
 - **代码质量**：编写安全、高效、可维护的生产级Rust代码
@@ -400,8 +402,9 @@ rust-program-cha/
 - **可维护性** - 注重代码组织和结构，便于维护和扩展
 
 ### 学习资源
-- **难点解析** - 深入剖析Rust学习中的常见难点
+- **难点解析** - 深入剖析Rust学习中的常见难点，特别是unsafe Rust和内存管理相关概念
 - **示例项目** - 提供各种难度的实际项目案例
+- **未定义行为检测** - 介绍如何使用Miri等工具检测未定义行为
 
 ## 🤝 贡献指南
 
@@ -471,6 +474,7 @@ MIT许可证是一种宽松的开源软件许可证，允许您：
 - [VS Code + Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer) - 推荐的开发环境
 - [Rustfmt](https://github.com/rust-lang/rustfmt) - 代码格式化工具
 - [Clippy](https://github.com/rust-lang/rust-clippy) - 代码质量检查工具
+- [Miri](https://github.com/rust-lang/miri) - 未定义行为检测器和Rust解释器
 
 ---
 
@@ -478,4 +482,6 @@ MIT许可证是一种宽松的开源软件许可证，允许您：
 
 <p align="center">
   <i>"Rust: 一门赋予每个人构建可靠且高效软件能力的语言。"</i>
+  <br>
+  <i>安全、并发、高效 — 选择 Rust，选择未来！</i>
 </p>
