@@ -1,9 +1,5 @@
 # Rust Hashing Cheat Sheet
 
-[bd103.github.io](https://bd103.github.io/blog/2025-11-10-rust-hashing-cheat-sheet/)
-
-2025-11-10
-
 [#rust](https://bd103.github.io/tags/rust)
 
 Hashing is the process of transforming arbitrary data into a fixed-size number. Several useful programming concepts arise out of hash codes:
@@ -19,19 +15,22 @@ Recently I tried writing a hash set from scratch in [Rust](https://rust-lang.org
 
 Hashing a value is as simple as creating a `Hasher`, calling `value.hash(&mut hasher)`, and then calling `hasher.finish()`.
 
-    use std::hash::{DefaultHasher, Hash, Hasher};
+```rust
+use std:#️⃣:{DefaultHasher, Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
     "Hello, world!".hash(&mut hasher);
     let hash: u64 = hasher.finish();
 
     println!("Hash: {hash}"); // Hash: 7092736762612737980
+```
 
-## Hashing Several Values into One Code
+Hashing Several Values into One Code
 
 You can call `value.hash(&mut hasher)` several times to create a hash code composed of multiple data sources. This is useful when hashing structs or arrays.
 
-    use std::hash::{DefaultHasher, Hash, Hasher};
+```rust
+use std:#️⃣:{DefaultHasher, Hash, Hasher};
 
     let mut hasher = DefaultHasher::new();
 
@@ -42,6 +41,7 @@ You can call `value.hash(&mut hasher)` several times to create a hash code compo
     let hash: u64 = hasher.finish();
 
     println!("Hash: {hash}"); // Hash: 3402450879032501501
+```
 
 ## `Hash`, `Hasher`, and `DefaultHasher`
 
@@ -55,7 +55,8 @@ You can call `value.hash(&mut hasher)` several times to create a hash code compo
 
 To make a hash resilient to [hash flooding](https://en.wikipedia.org/wiki/Collision_attack#Hash_flooding), you can create a `Hasher` with a random seed using `RandomState`.
 
-    use std::hash::{BuildHasher, Hash, Hasher, RandomState};
+```rust
+use std:#️⃣:{BuildHasher, Hash, Hasher, RandomState};
 
     let state = RandomState::new();
 
@@ -64,16 +65,19 @@ To make a hash resilient to [hash flooding](https://en.wikipedia.org/wiki/Collis
     let hash = hasher.finish();
 
     println!("Hash: {hash}"); // Hash: 1905042730872565693
+```
 
 There's also a shorthand for this pattern using [`BuildHasher::hash_one()`](https://doc.rust-lang.org/stable/std/hash/trait.BuildHasher.html#method.hash_one).
 
-    use std::hash::{BuildHasher, RandomState};
+```rust
+use std:#️⃣:{BuildHasher, RandomState};
 
     let state = RandomState::new();
 
     let hash = state.hash_one("Hello, world!");
 
     println!("Hash: {hash}"); // Hash: 11506452463443521132
+```
 
 Note how the hash codes are different from the two examples, even though they're both hashing `"Hello, world!"`, because `RandomState::new()` creates a new random seed each time it is called.
 
@@ -88,7 +92,8 @@ If you want to hash two separate values and compare them for equality, you would
 
 The easiest way to make a custom type hashable is by deriving `Hash`.
 
-    use std::hash::{DefaultHasher, Hash, Hasher};
+```rust
+use std:#️⃣:{DefaultHasher, Hash, Hasher};
 
     #[derive(Hash)]
     struct Foo {
@@ -104,12 +109,15 @@ The easiest way to make a custom type hashable is by deriving `Hash`.
     let hash: u64 = hasher.finish();
 
     println!("Hash: {hash}"); // Hash: 3402450879032501501
+```
+
 
 ## Implementing `Hash` Manually
 
 If you look closely, you'll notice that the hash codes from [Hashing Several Values into One Code](https://bd103.github.io/blog/2025-11-10-rust-hashing-cheat-sheet/#hashing-several-values-into-one-code) and [Deriving `Hash`](https://bd103.github.io/blog/2025-11-10-rust-hashing-cheat-sheet/#deriving-hash) are equal! This is because they're hashing the same data in the same order with the same seed. To prove this, we can expand the `Hash` derivation:
 
-    use std::hash::{Hash, Hasher};
+```rust
+use std:#️⃣:{Hash, Hasher};
 
     struct Foo {
         a: &'static str,
@@ -120,16 +128,13 @@ If you look closely, you'll notice that the hash codes from [Hashing Several Val
     impl Hash for Foo {
         fn hash<H: Hasher>(&self, state: &mut H) {  self.a.hash(state);  self.b.hash(state);  self.c.hash(state);  }
     }
+```
 
-## Conclusion
+Conclusion
 
 I hope these examples help you wrap your head around Rust's hashing support! While I didn't cover it in this article, you may be also interested in [`Hasher`](https://doc.rust-lang.org/stable/std/hash/trait.Hasher.html)'s methods and how primitives like [`bool`](https://doc.rust-lang.org/stable/std/hash/trait.Hash.html#impl-Hash-for-bool), [`char`](https://doc.rust-lang.org/stable/std/hash/trait.Hash.html#impl-Hash-for-char), and [tuples](https://doc.rust-lang.org/stable/std/hash/trait.Hash.html#impl-Hash-for-(T,)) implement `Hash`. You may also enjoy looking at [`rustc-hash`](https://lib.rs/crates/rustc-hash) (previous `fxhash`), [`fnv`](https://lib.rs/crates/fnv), [`sha2`](https://lib.rs/crates/sha2), and [`blake2`](https://lib.rs/crates/blake2).
 
 Happy hacking!
 
 1. In Rust 1.91.0 the default hashing algorithm is [SipHash 1-3](https://en.wikipedia.org/wiki/SipHash), but this is an internal detail that may change in the future. ↩
-
 2. Technically, you could just create the two hashers by calling `DefaultHasher::new()`, which initializes them with a seed of 0. This is vulnerable to [hash flooding](https://en.wikipedia.org/wiki/Collision_attack#Hash_flooding) attacks, however, so I don't recommend it! ↩
-
-
-[Read in Cubox](https://cubox.pro/my/card?id=7388676182767568653)
