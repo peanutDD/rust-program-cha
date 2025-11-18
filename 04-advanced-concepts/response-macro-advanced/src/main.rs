@@ -17,7 +17,7 @@ use handlers::UserHandler;
 async fn health_check(_req: HttpRequest) -> impl Responder {
     // 直接构建HTTP响应
     HttpResponse::Ok()
-        .content_type("application/j
+        .content_type("application/json")
         .json(serde_json::json!({
             "success": true,
             "message": "服务运行正常",
