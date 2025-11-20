@@ -36,6 +36,9 @@ use std::borrow::Cow;
 use std::error::Error;
 use std::fmt::{self, Display, Debug};
 
+// 导入必要的serde和actix_web相关特性
+use serde::{Serialize, Deserialize};
+
 /// API 响应错误结构体
 /// 
 /// 提供统一的错误响应格式和错误处理功能，支持丰富的链式调用。
@@ -48,7 +51,7 @@ use std::fmt::{self, Display, Debug};
 /// - 支持自定义状态码和错误详情
 /// - 集成错误追踪功能
 /// - 支持从Result直接转换
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ApiError {
     /// 操作是否成功
     pub success: bool,
@@ -57,6 +60,7 @@ pub struct ApiError {
     /// 状态码
     pub code: u16,
     /// 可选的详细错误信息
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub details: Option<serde_json::Value>,
     /// 响应数据（可选）
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -66,23 +70,6 @@ pub struct ApiError {
     pub trace_id: Option<String>,
     /// 时间戳
     pub timestamp: u64
-}
-
-impl serde::Serialize for ApiError {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("ApiError", 7)?;
-        state.serialize_field("success", &self.success)?;
-        state.serialize_field("code", &self.code)?;
-        state.serialize_field("message", &self.message)?;
-        state.serialize_field("details", &self.details)?;
-        state.serialize_field("data", &self.data)?;
-        state.serialize_field("trace_id", &self.trace_id)?;
-        state.serialize_field("timestamp", &self.timestamp)?;
-        state.end()
-    }
 }
 
 // 添加JsonSchema支持，用于API文档生成和数据验证
@@ -116,6 +103,8 @@ impl schemars::JsonSchema for ApiError {
     }
 }
 
+/// 为 ApiError 实现各种便捷构造函数和链式方法
+/// 注意：不能为外部类型（foreign type）定义 inherent impl，因此这里是为本地定义的 ApiError 类型实现方法
 impl ApiError {
     /// 创建新的ApiError实例
     pub fn new(code: u16, message: &str) -> Self {
@@ -308,7 +297,7 @@ impl Error for ApiError {
 impl actix_web::Responder for ApiError {
     type Body = actix_web::body::BoxBody;
     
-    fn respond_to(self, req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
+    fn respond_to(self, _req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
         // 安全的状态码转换
         let status_code = match http::StatusCode::from_u16(self.code) {
             Ok(status) => status,
@@ -321,30 +310,16 @@ impl actix_web::Responder for ApiError {
             }
         };
         
-        // 获取内容类型协商结果
-        let content_format = negotiate_content_type(req);
-        
-        let (body, content_type) = match content_format {
-            ContentFormat::Json => {
-                // 尝试将self序列化为JSON
-                match serde_json::to_string(&self) {
-                    Ok(json_body) => (json_body, "application/json".to_string()),
-                    Err(e) => {
-                        // 序列化失败，返回错误文本
-                        let error_msg = format!("Error serializing response: {}", e);
-                        (error_msg, "text/plain".to_string())
-                    }
+        // 只支持JSON格式，移除内容协商
+        let (body, content_type) = {
+            // 尝试将self序列化为JSON
+            match serde_json::to_string(&self) {
+                Ok(json_body) => (json_body, "application/json".to_string()),
+                Err(e) => {
+                    // 序列化失败，返回错误文本
+                    let error_msg = format!("Error serializing response: {}", e);
+                    (error_msg, "text/plain".to_string())
                 }
-            },
-            ContentFormat::Text => {
-                // 生成纯文本响应
-                let text_body = format!(
-                    "{} (Code: {}, Timestamp: {})",
-                    self.message,
-                    self.code,
-                    self.timestamp
-                );
-                (text_body, "text/plain".to_string())
             }
         };
         
@@ -370,9 +345,9 @@ impl<T> WithHeader<T>
 where
     T: serde::Serialize,
 {
-    pub fn new(inner: T, name: &str, value: &str) -> Self {
+    pub fn new(inner: T, name: impl Into<String>, value: impl Into<String>) -> Self {
         let mut headers = Vec::new();
-        headers.push((name.to_string(), value.to_string()));
+        headers.push((name.into(), value.into()));
         Self {
             inner,
             headers,
@@ -380,8 +355,8 @@ where
     }
     
     /// 添加另一个HTTP头
-    pub fn with_header(mut self, name: &str, value: &str) -> Self {
-        self.headers.push((name.to_string(), value.to_string()));
+    pub fn with_header(mut self, name: impl Into<String>, value: impl Into<String>) -> Self {
+        self.headers.push((name.into(), value.into()));
         self
     }
     
@@ -402,37 +377,30 @@ where
 {
     type Body = actix_web::body::BoxBody;
     
-    fn respond_to(self, req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
+    fn respond_to(self, _req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
         let mut response = actix_web::HttpResponse::Ok();
         
-        // 添加所有自定义头
-        for (name, value) in self.headers {
-            response.insert_header((name, value));
+        // 添加所有自定义头 - 安全处理
+        for (name_str, value_str) in self.headers {
+            // 使用辅助函数安全创建头信息，避免临时值生命周期问题
+            let name_clone = name_str.clone();
+            let value_clone = value_str.clone();
+            if let Ok(header_name) = actix_web::http::header::HeaderName::from_bytes(name_clone.as_bytes()) {
+                if let Ok(header_value) = actix_web::http::header::HeaderValue::from_str(&value_clone) {
+                    response = response.append_header((header_name, header_value));
+                }
+            }
         }
         
-        // 获取内容类型协商结果
-        let content_format = negotiate_content_type(req);
-        
-        let (body, content_type) = match content_format {
-            ContentFormat::Json => {
-                // 尝试将self.inner序列化为JSON
-                match serde_json::to_string(&self.inner) {
-                    Ok(json_body) => (json_body, "application/json".to_string()),
-                    Err(e) => {
-                        // 序列化失败，返回错误文本
-                        let error_msg = format!("Error serializing response: {}", e);
-                        (error_msg, "text/plain".to_string())
-                    }
-                }
-            },
-            ContentFormat::Text => {
-                // 尝试获取一个字符串表示（简单情况）
-                match serde_json::to_string(&self.inner) {
-                    Ok(json_str) => (json_str, "text/plain".to_string()),
-                    Err(e) => {
-                        let error_msg = format!("Cannot format response: {}", e);
-                        (error_msg, "text/plain".to_string())
-                    }
+        // 只支持JSON格式，移除内容协商
+        let (body, content_type) = {
+            // 尝试将self.inner序列化为JSON
+            match serde_json::to_string(&self.inner) {
+                Ok(json_body) => (json_body, "application/json".to_string()),
+                Err(e) => {
+                    // 序列化失败，返回错误文本
+                    let error_msg = format!("Error serializing response: {}", e);
+                    (error_msg, "text/plain".to_string())
                 }
             }
         };
@@ -461,7 +429,7 @@ where
     }
     
     /// 添加自定义HTTP头
-    pub fn with_header(self, name: &str, value: &str) -> WithHeader<Self> {
+    pub fn with_header(self, name: impl Into<String>, value: impl Into<String>) -> WithHeader<Self> {
         WithHeader::new(self, name, value)
     }
     
@@ -477,36 +445,22 @@ where
 {
     type Body = actix_web::body::BoxBody;
     
-    fn respond_to(self, req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
+    fn respond_to(self, _req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
         // 安全的状态码转换
         let status_code = match http::StatusCode::from_u16(self.status_code) {
             Ok(status) => status,
             Err(_) => http::StatusCode::OK,
         };
         
-        // 获取内容类型协商结果
-        let content_format = negotiate_content_type(req);
-        
-        let (body, content_type) = match content_format {
-            ContentFormat::Json => {
-                // 尝试将self.inner序列化为JSON
-                match serde_json::to_string(&self.inner) {
-                    Ok(json_body) => (json_body, "application/json".to_string()),
-                    Err(e) => {
-                        // 序列化失败，返回错误文本
-                        let error_msg = format!("Error serializing response: {}", e);
-                        (error_msg, "text/plain".to_string())
-                    }
-                }
-            },
-            ContentFormat::Text => {
-                // 尝试获取一个字符串表示
-                match serde_json::to_string(&self.inner) {
-                    Ok(json_str) => (json_str, "text/plain".to_string()),
-                    Err(e) => {
-                        let error_msg = format!("Cannot format response: {}", e);
-                        (error_msg, "text/plain".to_string())
-                    }
+        // 只支持JSON格式，移除内容协商
+        let (body, content_type) = {
+            // 尝试将self.inner序列化为JSON
+            match serde_json::to_string(&self.inner) {
+                Ok(json_body) => (json_body, "application/json".to_string()),
+                Err(e) => {
+                    // 序列化失败，返回错误文本
+                    let error_msg = format!("Error serializing response: {}", e);
+                    (error_msg, "text/plain".to_string())
                 }
             }
         };
@@ -586,46 +540,11 @@ pub fn extract_error_message<E: std::fmt::Display + std::fmt::Debug>(err: &E, fi
     }
 }
 
-/// 辅助函数: 根据请求的Accept头协商内容类型
-/// 返回最适合的content-type和相应的格式类型
-pub fn negotiate_content_type(req: &actix_web::HttpRequest) -> (&'static str, ContentFormat) {
-    // 定义支持的内容格式
-    #[derive(Clone, Copy, Debug)]
-    pub enum ContentFormat {
-        Json,
-        Xml,
-        Html,
-        PlainText,
-    }
-    
-    // 获取Accept头
-    if let Some(accept) = req.headers().get(actix_web::http::header::ACCEPT) {
-        if let Ok(accept_str) = accept.to_str() {
-            // 按优先级检查支持的内容类型
-            let accept_types = [
-                ("application/json", ContentFormat::Json),
-                ("text/xml", ContentFormat::Xml),
-                ("application/xml", ContentFormat::Xml),
-                ("text/html", ContentFormat::Html),
-                ("text/plain", ContentFormat::PlainText),
-            ];
-            
-            // 简单的内容类型匹配
-            for (content_type, format) in accept_types.iter() {
-                if accept_str.contains(content_type) {
-                    return (*content_type, *format);
-                }
-            }
-            
-            // 处理通配符
-            if accept_str.contains("*") {
-                return ("application/json", ContentFormat::Json);
-            }
-        }
-    }
-    
+
+/// 内容类型协商函数 - 简化为只返回JSON格式
+pub fn negotiate_content_type(_req: &actix_web::HttpRequest) -> &'static str {
     // 默认返回JSON
-    ("application/json", ContentFormat::Json)
+    "application/json"
 }
 
 

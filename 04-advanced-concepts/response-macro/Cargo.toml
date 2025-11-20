@@ -5,6 +5,7 @@ description = "A macro library for simplifying HTTP response handling in Actix W
 authors = []
 edition = "2021"
 
+
 [lib]
 proc-macro = true
 
