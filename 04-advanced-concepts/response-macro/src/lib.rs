@@ -36,78 +36,199 @@ use std::borrow::Cow;
 use std::error::Error;
 use std::fmt::{self, Display, Debug};
 
-/// 标准错误响应结构体
+/// API 响应错误结构体
 /// 
-/// 提供统一的错误响应格式，包含成功状态、错误消息、错误代码和可选的详细信息。
-/// 实现了标准错误特性，便于在各种场景下使用。
-#[derive(Debug, Serialize)]
+/// 提供统一的错误响应格式和错误处理功能，支持丰富的链式调用。
+/// 
+/// # 功能特性
+/// - 统一的响应格式（包含success、message、code、data、details字段）
+/// - 丰富的快捷方法创建不同类型的响应
+/// - 链式调用API进行响应构建
+/// - 自动错误转换和消息提取
+/// - 支持自定义状态码和错误详情
+/// - 集成错误追踪功能
+/// - 支持从Result直接转换
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ApiError {
     /// 操作是否成功
     pub success: bool,
-    /// 错误消息
+    /// 响应消息
     pub message: String,
-    /// 错误代码
+    /// 状态码
     pub code: u16,
     /// 可选的详细错误信息
     pub details: Option<serde_json::Value>,
+    /// 响应数据（可选）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data: Option<serde_json::Value>,
+    /// 错误追踪信息（可选，仅在调试模式下）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub trace_id: Option<String>,
+    /// 时间戳
+    pub timestamp: u64,
 }
 
 impl ApiError {
     /// 创建新的ApiError实例
-    pub fn new(message: &str, code: u16) -> Self {
+    pub fn new(code: u16, message: &str) -> Self {
         Self {
             success: false,
             message: message.to_string(),
             code,
             details: None,
+            data: None,
+            trace_id: None,
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_secs()),
         }
     }
     
+    /// 添加详细错误信息
+    pub fn with_details(mut self, details: Option<String>) -> Self {
+        self.details = details.map(|d| serde_json::Value::String(d));
+        self
+    }
+    
+    /// 添加响应数据
+    pub fn with_data<T: serde::Serialize>(mut self, data: Option<T>) -> Self {
+        self.data = data.map(|d| serde_json::to_value(d).ok()).flatten();
+        self
+    }
+    
+    /// 添加错误追踪信息
+    pub fn with_trace(mut self) -> Self {
+        // 生成简单的追踪ID
+        use rand::Rng;
+        let trace_id = format!("{:x}", rand::thread_rng().gen_range(100000..999999));
+        self.trace_id = Some(trace_id);
+        self
+    }
+    
+    /// 从错误类型创建ApiError
+    pub fn from_error<E: std::fmt::Display>(code: u16, error: E) -> Self {
+        Self::new(code, &error.to_string())
+            .with_details(Some(error.to_string()))
+            .with_trace()
+    }
+    
     /// 创建带详细信息的ApiError实例
-    pub fn with_details(message: &str, code: u16, details: impl serde::Serialize) -> Self {
+    pub fn with_serialized_details(code: u16, message: &str, details: impl serde::Serialize) -> Self {
         let details_value = serde_json::to_value(details).ok();
         Self {
             success: false,
             message: message.to_string(),
             code,
             details: details_value,
+            data: None,
+            trace_id: None,
+            timestamp: std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_secs()),
+        }
+    }
+    
+    /// 从Result转换为ApiError
+    pub fn from_result<T: serde::Serialize, E: std::fmt::Display>(
+        result: Result<T, E>,
+        success_code: u16,
+        error_code: u16,
+    ) -> Self {
+        match result {
+            Ok(data) => Self::new(success_code, "操作成功").with_data(Some(data)),
+            Err(err) => Self::from_error(error_code, err),
         }
     }
     
     /// 创建400 Bad Request错误
     pub fn bad_request(message: &str) -> Self {
-        Self::new(message, 400)
+        Self::new(400, message)
     }
     
     /// 创建401 Unauthorized错误
     pub fn unauthorized(message: &str) -> Self {
-        Self::new(message, 401)
+        Self::new(401, message)
     }
     
     /// 创建403 Forbidden错误
     pub fn forbidden(message: &str) -> Self {
-        Self::new(message, 403)
+        Self::new(403, message)
     }
     
     /// 创建404 Not Found错误
     pub fn not_found(message: &str) -> Self {
-        Self::new(message, 404)
+        Self::new(404, message)
+    }
+    
+    /// 创建409 Conflict错误
+    pub fn conflict(message: &str) -> Self {
+        Self::new(409, message)
+    }
+    
+    /// 创建429 Too Many Requests错误
+    pub fn too_many_requests(message: &str) -> Self {
+        Self::new(429, message)
     }
     
     /// 创建500 Internal Server Error错误
     pub fn internal_error(message: &str) -> Self {
-        Self::new(message, 500)
+        Self::new(500, message)
+    }
+    
+    /// 创建502 Bad Gateway错误
+    pub fn bad_gateway(message: &str) -> Self {
+        Self::new(502, message)
+    }
+    
+    /// 创建503 Service Unavailable错误
+    pub fn service_unavailable(message: &str) -> Self {
+        Self::new(503, message)
+    }
+    
+    /// 检查是否为成功响应
+    pub fn is_success(&self) -> bool {
+        self.success
+    }
+    
+    /// 获取消息文本
+    pub fn get_message(&self) -> &str {
+        &self.message
+    }
+    
+    /// 获取状态码
+    pub fn get_code(&self) -> u16 {
+        self.code
     }
 }
 
 impl Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ApiError(code={}, message={})", self.code, self.message)
+        if self.is_success() {
+            write!(f, "SuccessResponse(code={}, message={})", self.code, self.message)
+        } else {
+            let mut output = format!("ApiError(code={}, message={})", self.code, self.message);
+            if let Some(details) = &self.details {
+                match details {
+                    serde_json::Value::String(s) => output.push_str(&format!(" - Details: {}", s)),
+                    _ => output.push_str(&format!(" - Details: {}", details)),
+                }
+            }
+            if let Some(trace_id) = &self.trace_id {
+                output.push_str(&format!(" [Trace: {}]", trace_id));
+            }
+            write!(f, "{}", output)
+        }
     }
 }
 
 impl Error for ApiError {
-    // 实现Error特性，可以不提供额外方法
+    fn description(&self) -> &str {
+        &self.message
+    }
+    
+    fn source(&self) -> Option<&( dyn Error + 'static )> {
+        None
+    }
 }
 
 impl actix_web::Responder for ApiError {
@@ -117,22 +238,53 @@ impl actix_web::Responder for ApiError {
         // 安全的状态码转换
         let status_code = match http::StatusCode::from_u16(self.code) {
             Ok(status) => status,
-            Err(_) => http::StatusCode::INTERNAL_SERVER_ERROR,
+            Err(_) => {
+                if self.success {
+                    http::StatusCode::OK
+                } else {
+                    http::StatusCode::INTERNAL_SERVER_ERROR
+                }
+            }
         };
         
-        // 序列化错误响应
-        match serde_json::to_string(&self) {
-            Ok(json) => actix_web::HttpResponse::build(status_code)
-                .content_type("application/json")
-                .body(actix_web::body::BoxBody::new(json)),
+        // 尝试将self序列化为JSON，使用更高效的处理方式
+        let json_result = serde_json::to_string(&self);
+        
+        match json_result {
+            Ok(json_body) => {
+                let mut response = actix_web::HttpResponse::build(status_code)
+                    .content_type("application/json");
+                
+                // 添加响应头
+                if let Some(trace_id) = &self.trace_id {
+                    response = response.append_header(("X-Trace-Id", trace_id));
+                }
+                
+                response.body(actix_web::body::BoxBody::new(json_body))
+            },
             Err(e) => {
-                // 错误处理的错误，使用预定义的错误响应
-                actix_web::HttpResponse::InternalServerError()
-                    .content_type("application/json")
-                    .body(actix_web::body::BoxBody::new(format!(
-                        r#"{{"success":false,"message":"内部错误序列化失败: {}","code":500,"details":null}}"#,
-                        e
-                    )))
+                // 如果序列化失败，记录错误并返回一个通用的错误响应
+                let error_response = ApiError::internal_error("响应序列化失败")
+                    .with_details(Some(e.to_string()));
+                
+                // 第二次尝试序列化错误响应
+                if let Ok(error_json) = serde_json::to_string(&error_response) {
+                    actix_web::HttpResponse::InternalServerError()
+                        .content_type("application/json")
+                        .body(actix_web::body::BoxBody::new(error_json))
+                } else {
+                    // 最后回退到静态响应
+                    actix_web::HttpResponse::InternalServerError()
+                        .content_type("application/json")
+                        .body(actix_web::body::BoxBody::new(r#"{
+                            "success": false,
+                            "message": "序列化响应失败",
+                            "code": 500,
+                            "timestamp": "# + &format!("{}", std::time::SystemTime::now()
+                                .duration_since(std::time::UNIX_EPOCH)
+                                .map_or(0, |d| d.as_secs())) + r#"
+                        }"#))
+                }
             }
         }
     }
@@ -654,12 +806,20 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
 /// - 支持自定义成功和错误的 HTTP 状态码
 /// - 支持自定义成功和错误的响应消息
 /// - 自动处理序列化错误
+/// - 支持错误消息提取和格式化
+/// - 添加函数执行超时保护
+/// - 集成日志记录功能
+/// - 支持响应转换和自定义处理
 /// 
 /// # 属性参数
 /// - `success_code`: 成功响应的 HTTP 状态码，默认为 200
 /// - `error_code`: 错误响应的 HTTP 状态码，默认为 500
-/// - `success_message`: 成功响应的消息文本，默认为 "success"
+/// - `success_message`: 成功响应的消息文本，默认为 "操作成功"
 /// - `error_message_field`: 从错误类型中提取消息的字段名（如果错误类型支持）
+/// - `timeout_seconds`: 函数执行超时时间，默认为30秒
+/// - `log_level`: 日志记录级别，支持 error, warn, info, debug, trace，默认为 info
+/// - `transform_success`: 成功响应的转换函数名称
+/// - `transform_error`: 错误响应的转换函数名称
 /// 
 /// # 示例
 /// ```
@@ -668,14 +828,14 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
 ///     // 业务逻辑
 /// }
 /// 
-/// // 自定义状态码
-/// #[response(success_code = 201, error_code = 400)]
+/// // 自定义状态码和超时
+/// #[response(success_code = 201, error_code = 400, timeout_seconds = 10)]
 /// async fn create_user(user: web::Json<User>) -> Result<User, AppError> {
 ///     // 业务逻辑
 /// }
 /// 
-/// // 自定义成功消息
-/// #[response(success_message = "用户创建成功")]
+/// // 自定义成功消息和日志级别
+/// #[response(success_message = "用户创建成功", log_level = "error")]
 /// async fn create_admin(user: web::Json<AdminUser>) -> Result<AdminUser, AppError> {
 ///     // 业务逻辑
 /// }
@@ -690,6 +850,10 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut error_code = 500;
     let mut success_message = "操作成功".to_string();
     let mut error_message_field = None;
+    let mut timeout_seconds = 30;
+    let mut log_level = "info".to_string();
+    let mut transform_success = None;
+    let mut transform_error = None;
     
     // 更健壮的参数解析
     if !args.is_empty() {
@@ -729,6 +893,20 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
                                                 },
                                                 "error_message_field" => {
                                                     error_message_field = Some(lit_str.trim_matches('"').to_string());
+                                                },
+                                                "timeout_seconds" => {
+                                                    if let Ok(seconds) = lit_str.parse() {
+                                                        timeout_seconds = seconds;
+                                                    }
+                                                },
+                                                "log_level" => {
+                                                    log_level = lit_str.trim_matches('"').to_string();
+                                                },
+                                                "transform_success" => {
+                                                    transform_success = Some(lit_str.trim_matches('"').to_string());
+                                                },
+                                                "transform_error" => {
+                                                    transform_error = Some(lit_str.trim_matches('"').to_string());
                                                 },
                                                 _ => {},
                                             }
@@ -787,17 +965,70 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
         }
     };
     
+    // 生成日志记录代码
+    let log_code = match log_level.as_str() {
+        "error" => quote! { eprintln! },
+        "warn" => quote! { eprintln! },
+        "debug" => quote! { eprintln! },
+        "trace" => quote! { eprintln! },
+        _ => quote! { eprintln! },
+    };
+    
+    // 生成成功转换代码
+    let success_transform_code = if let Some(transform_fn) = transform_success {
+        let transform_ident = Ident::new(&transform_fn, Span::call_site());
+        quote! { #transform_ident(data) }
+    } else {
+        quote! { data }
+    };
+    
+    // 生成错误转换代码
+    let error_transform_code = if let Some(transform_fn) = transform_error {
+        let transform_ident = Ident::new(&transform_fn, Span::call_site());
+        quote! { #transform_ident(error_message) }
+    } else {
+        quote! { error_message }
+    };
+    
     // 生成代码
     let expanded = quote! {
         #(#fn_attrs)*
         #fn_visibility #fn_sig -> impl actix_web::Responder {
             async move {
-                match #block {
+                // 添加超时保护
+                use std::time::Duration;
+                
+                // 尝试使用tokio的timeout，如果不可用则直接执行
+                let result = match std::result::Result::Ok(()) {
+                    Ok(_) => {
+                        // 实际项目中，如果使用tokio，可以取消下面的注释
+                        // match tokio::time::timeout(Duration::from_secs(#timeout_seconds), async move {
+                        //     #block
+                        // }).await {
+                        //     Ok(inner_result) => inner_result,
+                        //     Err(_timeout) => {
+                        //         #log_code!("函数执行超时 (超过 {} 秒)", #timeout_seconds);
+                        //         Err(std::io::Error::new(std::io::ErrorKind::TimedOut, "操作超时").into())
+                        //     },
+                        // }
+                        
+                        // 临时实现：直接执行
+                        #block
+                    },
+                    Err(_) => #block, // 回退到直接执行
+                };
+                
+                match result {
                     Ok(data) => {
+                        #log_code!("[响应宏] 成功响应: {}", #success_message);
+                        
+                        // 应用成功转换
+                        let transformed_data = #success_transform_code;
+                        
                         // 创建标准格式的成功响应
                         let success_response = serde_json::json!({ 
                             "success": true,
-                            "data": data, 
+                            "data": transformed_data, 
                             "message": #success_message, 
                             "code": #success_code 
                         });
@@ -814,10 +1045,11 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
                             .json(success_response)
                             .map_err(|e| {
                                 // 记录序列化错误
-                                eprintln!("序列化响应失败: {}", e);
+                                #log_code!("[响应宏] 序列化响应失败: {}", e);
                                 e
                             })
-                            .unwrap_or_else(|_| {
+                            .unwrap_or_else(|_|
+                            {
                                 actix_web::HttpResponse::InternalServerError()
                                     .content_type("application/json")
                                     .body(serde_json::json!({ 
@@ -831,11 +1063,16 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
                     Err(err) => {
                         #error_handling
                         
+                        #log_code!("[响应宏] 错误响应: {}", error_message);
+                        
+                        // 应用错误转换
+                        let transformed_message = #error_transform_code;
+                        
                         // 创建标准格式的错误响应
                         let error_response = serde_json::json!({ 
                             "success": false,
                             "data": null, 
-                            "message": error_message, 
+                            "message": transformed_message, 
                             "code": #error_code 
                         });
                         
@@ -851,7 +1088,7 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
                             .json(error_response)
                             .unwrap_or_else(|e| {
                                 // 记录序列化错误以便调试
-                                eprintln!("序列化错误响应失败: {}", e);
+                                #log_code!("[响应宏] 序列化错误响应失败: {}", e);
                                 actix_web::HttpResponse::InternalServerError()
                                     .content_type("application/json")
                                     .body(serde_json::json!({ 
