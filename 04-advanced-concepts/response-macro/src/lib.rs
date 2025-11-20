@@ -48,7 +48,7 @@ use std::fmt::{self, Display, Debug};
 /// - 支持自定义状态码和错误详情
 /// - 集成错误追踪功能
 /// - 支持从Result直接转换
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct ApiError {
     /// 操作是否成功
     pub success: bool,
@@ -65,7 +65,55 @@ pub struct ApiError {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub trace_id: Option<String>,
     /// 时间戳
-    pub timestamp: u64,
+    pub timestamp: u64
+}
+
+impl serde::Serialize for ApiError {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("ApiError", 7)?;
+        state.serialize_field("success", &self.success)?;
+        state.serialize_field("code", &self.code)?;
+        state.serialize_field("message", &self.message)?;
+        state.serialize_field("details", &self.details)?;
+        state.serialize_field("data", &self.data)?;
+        state.serialize_field("trace_id", &self.trace_id)?;
+        state.serialize_field("timestamp", &self.timestamp)?;
+        state.end()
+    }
+}
+
+// 添加JsonSchema支持，用于API文档生成和数据验证
+#[cfg(feature = "schema")]
+impl schemars::JsonSchema for ApiError {
+    fn schema_name() -> String {
+        "ApiError".to_string()
+    }
+    
+    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+        let mut schema = gen.subschema_for::<Self>();
+        if let Some(obj) = schema.as_object_mut() {
+            // 增强schema描述
+            obj.description = Some("API响应统一格式，支持成功和错误响应。".to_string());
+            
+            // 添加字段描述
+            if let Some(properties) = obj.properties.as_mut() {
+                if let Some(success_prop) = properties.get_mut("success") {
+                    if let Some(obj) = success_prop.as_object_mut() {
+                        obj.description = Some("表示操作是否成功".to_string());
+                    }
+                }
+                if let Some(code_prop) = properties.get_mut("code") {
+                    if let Some(obj) = code_prop.as_object_mut() {
+                        obj.description = Some("HTTP状态码".to_string());
+                    }
+                }
+            }
+        }
+        schema
+    }
 }
 
 impl ApiError {
@@ -137,6 +185,32 @@ impl ApiError {
         match result {
             Ok(data) => Self::new(success_code, "操作成功").with_data(Some(data)),
             Err(err) => Self::from_error(error_code, err),
+        }
+    }
+    
+    /// 根据HTTP状态码创建标准错误响应
+    pub fn from_status_code(code: u16) -> Self {
+        match code {
+            400 => Self::bad_request("请求参数错误"),
+            401 => Self::unauthorized("未授权访问"),
+            403 => Self::forbidden("拒绝访问"),
+            404 => Self::not_found("资源不存在"),
+            405 => Self::new(405, "请求方法不允许"),
+            409 => Self::conflict("资源冲突"),
+            429 => Self::too_many_requests("请求过于频繁"),
+            500 => Self::internal_error("服务器内部错误"),
+            502 => Self::bad_gateway("网关错误"),
+            503 => Self::service_unavailable("服务不可用"),
+            504 => Self::new(504, "网关超时"),
+            _ => {
+                if code >= 400 && code < 500 {
+                    Self::new(code, "客户端错误")
+                } else if code >= 500 && code < 600 {
+                    Self::new(code, "服务器错误")
+                } else {
+                    Self::new(code, "操作成功")
+                }
+            }
         }
     }
     
@@ -247,46 +321,42 @@ impl actix_web::Responder for ApiError {
             }
         };
         
-        // 尝试将self序列化为JSON，使用更高效的处理方式
-        let json_result = serde_json::to_string(&self);
+        // 获取内容类型协商结果
+        let content_format = negotiate_content_type(req);
         
-        match json_result {
-            Ok(json_body) => {
-                let mut response = actix_web::HttpResponse::build(status_code)
-                    .content_type("application/json");
-                
-                // 添加响应头
-                if let Some(trace_id) = &self.trace_id {
-                    response = response.append_header(("X-Trace-Id", trace_id));
+        let (body, content_type) = match content_format {
+            ContentFormat::Json => {
+                // 尝试将self序列化为JSON
+                match serde_json::to_string(&self) {
+                    Ok(json_body) => (json_body, "application/json".to_string()),
+                    Err(e) => {
+                        // 序列化失败，返回错误文本
+                        let error_msg = format!("Error serializing response: {}", e);
+                        (error_msg, "text/plain".to_string())
+                    }
                 }
-                
-                response.body(actix_web::body::BoxBody::new(json_body))
             },
-            Err(e) => {
-                // 如果序列化失败，记录错误并返回一个通用的错误响应
-                let error_response = ApiError::internal_error("响应序列化失败")
-                    .with_details(Some(e.to_string()));
-                
-                // 第二次尝试序列化错误响应
-                if let Ok(error_json) = serde_json::to_string(&error_response) {
-                    actix_web::HttpResponse::InternalServerError()
-                        .content_type("application/json")
-                        .body(actix_web::body::BoxBody::new(error_json))
-                } else {
-                    // 最后回退到静态响应
-                    actix_web::HttpResponse::InternalServerError()
-                        .content_type("application/json")
-                        .body(actix_web::body::BoxBody::new(r#"{
-                            "success": false,
-                            "message": "序列化响应失败",
-                            "code": 500,
-                            "timestamp": "# + &format!("{}", std::time::SystemTime::now()
-                                .duration_since(std::time::UNIX_EPOCH)
-                                .map_or(0, |d| d.as_secs())) + r#"
-                        }"#))
-                }
+            ContentFormat::Text => {
+                // 生成纯文本响应
+                let text_body = format!(
+                    "{} (Code: {}, Timestamp: {})",
+                    self.message,
+                    self.code,
+                    self.timestamp
+                );
+                (text_body, "text/plain".to_string())
             }
+        };
+        
+        let mut response = actix_web::HttpResponse::build(status_code)
+            .content_type(&content_type);
+        
+        // 添加响应头
+        if let Some(trace_id) = &self.trace_id {
+            response = response.append_header(("X-Trace-Id", trace_id));
         }
+        
+        response.body(actix_web::body::BoxBody::new(body))
     }
 }
 
@@ -340,16 +410,36 @@ where
             response.insert_header((name, value));
         }
         
-        // 序列化内部响应
-        match serde_json::to_string(&self.inner) {
-            Ok(json) => response
-                .content_type("application/json")
-                .body(actix_web::body::BoxBody::new(json)),
-            Err(e) => actix_web::HttpResponse::InternalServerError()
-                .content_type("application/json")
-                .body(format!(r#"{{"success":false,"data":null,"message":"序列化失败: {}","code":500}}"#, e))
-                .body()
-        }
+        // 获取内容类型协商结果
+        let content_format = negotiate_content_type(req);
+        
+        let (body, content_type) = match content_format {
+            ContentFormat::Json => {
+                // 尝试将self.inner序列化为JSON
+                match serde_json::to_string(&self.inner) {
+                    Ok(json_body) => (json_body, "application/json".to_string()),
+                    Err(e) => {
+                        // 序列化失败，返回错误文本
+                        let error_msg = format!("Error serializing response: {}", e);
+                        (error_msg, "text/plain".to_string())
+                    }
+                }
+            },
+            ContentFormat::Text => {
+                // 尝试获取一个字符串表示（简单情况）
+                match serde_json::to_string(&self.inner) {
+                    Ok(json_str) => (json_str, "text/plain".to_string()),
+                    Err(e) => {
+                        let error_msg = format!("Cannot format response: {}", e);
+                        (error_msg, "text/plain".to_string())
+                    }
+                }
+            }
+        };
+        
+        response
+            .content_type(&content_type)
+            .body(actix_web::body::BoxBody::new(body))
     }
 }
 
@@ -394,16 +484,36 @@ where
             Err(_) => http::StatusCode::OK,
         };
         
-        // 序列化内部响应
-        match serde_json::to_string(&self.inner) {
-            Ok(json) => actix_web::HttpResponse::build(status_code)
-                .content_type("application/json")
-                .body(actix_web::body::BoxBody::new(json)),
-            Err(e) => actix_web::HttpResponse::InternalServerError()
-                .content_type("application/json")
-                .body(format!(r#"{{"success":false,"data":null,"message":"序列化失败: {}","code":500}}"#, e))
-                .body()
-        }
+        // 获取内容类型协商结果
+        let content_format = negotiate_content_type(req);
+        
+        let (body, content_type) = match content_format {
+            ContentFormat::Json => {
+                // 尝试将self.inner序列化为JSON
+                match serde_json::to_string(&self.inner) {
+                    Ok(json_body) => (json_body, "application/json".to_string()),
+                    Err(e) => {
+                        // 序列化失败，返回错误文本
+                        let error_msg = format!("Error serializing response: {}", e);
+                        (error_msg, "text/plain".to_string())
+                    }
+                }
+            },
+            ContentFormat::Text => {
+                // 尝试获取一个字符串表示
+                match serde_json::to_string(&self.inner) {
+                    Ok(json_str) => (json_str, "text/plain".to_string()),
+                    Err(e) => {
+                        let error_msg = format!("Cannot format response: {}", e);
+                        (error_msg, "text/plain".to_string())
+                    }
+                }
+            }
+        };
+        
+        actix_web::HttpResponse::build(status_code)
+            .content_type(&content_type)
+            .body(actix_web::body::BoxBody::new(body))
     }
 }
 
@@ -442,15 +552,19 @@ where
     type Body = actix_web::body::BoxBody;
     
     fn respond_to(self, req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
-        // 序列化内部响应
+        // 对于WithContentType，我们优先使用用户指定的内容类型
+        // 但在序列化失败时，我们可能需要回退到文本格式
         match serde_json::to_string(&self.inner) {
             Ok(json) => actix_web::HttpResponse::Ok()
                 .content_type(&self.content_type)
                 .body(actix_web::body::BoxBody::new(json)),
-            Err(e) => actix_web::HttpResponse::InternalServerError()
-                .content_type(&self.content_type)
-                .body(format!(r#"{{"success":false,"data":null,"message":"序列化失败: {}","code":500}}"#, e))
-                .body()
+            Err(e) => {
+                // 序列化失败，使用文本格式返回错误信息
+                let error_msg = format!("Error serializing response: {}", e);
+                actix_web::HttpResponse::InternalServerError()
+                    .content_type("text/plain")
+                    .body(error_msg)
+            }
         }
     }
 }
@@ -470,6 +584,48 @@ pub fn extract_error_message<E: std::fmt::Display + std::fmt::Debug>(err: &E, fi
     } else {
         err.to_string()
     }
+}
+
+/// 辅助函数: 根据请求的Accept头协商内容类型
+/// 返回最适合的content-type和相应的格式类型
+pub fn negotiate_content_type(req: &actix_web::HttpRequest) -> (&'static str, ContentFormat) {
+    // 定义支持的内容格式
+    #[derive(Clone, Copy, Debug)]
+    pub enum ContentFormat {
+        Json,
+        Xml,
+        Html,
+        PlainText,
+    }
+    
+    // 获取Accept头
+    if let Some(accept) = req.headers().get(actix_web::http::header::ACCEPT) {
+        if let Ok(accept_str) = accept.to_str() {
+            // 按优先级检查支持的内容类型
+            let accept_types = [
+                ("application/json", ContentFormat::Json),
+                ("text/xml", ContentFormat::Xml),
+                ("application/xml", ContentFormat::Xml),
+                ("text/html", ContentFormat::Html),
+                ("text/plain", ContentFormat::PlainText),
+            ];
+            
+            // 简单的内容类型匹配
+            for (content_type, format) in accept_types.iter() {
+                if accept_str.contains(content_type) {
+                    return (*content_type, *format);
+                }
+            }
+            
+            // 处理通配符
+            if accept_str.contains("*") {
+                return ("application/json", ContentFormat::Json);
+            }
+        }
+    }
+    
+    // 默认返回JSON
+    ("application/json", ContentFormat::Json)
 }
 
 
@@ -1001,19 +1157,16 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
                 // 尝试使用tokio的timeout，如果不可用则直接执行
                 let result = match std::result::Result::Ok(()) {
                     Ok(_) => {
-                        // 实际项目中，如果使用tokio，可以取消下面的注释
-                        // match tokio::time::timeout(Duration::from_secs(#timeout_seconds), async move {
-                        //     #block
-                        // }).await {
-                        //     Ok(inner_result) => inner_result,
-                        //     Err(_timeout) => {
-                        //         #log_code!("函数执行超时 (超过 {} 秒)", #timeout_seconds);
-                        //         Err(std::io::Error::new(std::io::ErrorKind::TimedOut, "操作超时").into())
-                        //     },
-                        // }
-                        
-                        // 临时实现：直接执行
-                        #block
+                        // 实现tokio的超时保护
+                        match tokio::time::timeout(Duration::from_secs(#timeout_seconds), async move {
+                            #block
+                        }).await {
+                            Ok(inner_result) => inner_result,
+                            Err(_timeout) => {
+                                #log_code!("函数执行超时 (超过 {} 秒)", #timeout_seconds);
+                                Err(std::io::Error::new(std::io::ErrorKind::TimedOut, "操作超时").into())
+                            },
+                        }
                     },
                     Err(_) => #block, // 回退到直接执行
                 };
@@ -1180,3 +1333,6 @@ pub fn error(input: TokenStream) -> TokenStream {
         }
     }
 }
+
+// 重新导出core库的类型供用户使用
+pub use response_macro_core::{ApiError, ResponseExt, WithHeader, WithStatus, WithContentType};
