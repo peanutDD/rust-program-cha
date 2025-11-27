@@ -599,20 +599,20 @@ MIT许可证是一种宽松的开源软件许可证，允许您：
 - [Rust By Example](https://doc.rust-lang.org/rust-by-example/)
 
 ### 学习社区
-- [Rust中文社区](https://rustcc.cn/)
-- [Rust编程学院](https://time.geekbang.org/course/intro/100060501)
-- [Stack Overflow - Rust标签](https://stackoverflow.com/questions/tagged/rust)
+- [Rust中文社区](https://rustcc.cn/) - 国内最大的Rust交流平台
+- [Rust编程学院](https://time.geekbang.org/course/intro/100060501) - 极客时间Rust课程
+- [Stack Overflow - Rust标签](https://stackoverflow.com/questions/tagged/rust) - 提问与解答社区
 
 ### 视频教程
-- [Rust官方入门视频](https://www.youtube.com/c/rustlang)
-- [Rust实战教程](https://www.bilibili.com/video/BV1hp4y1k7SV)
+- [Rust官方入门视频](https://www.youtube.com/c/rustlang) - 官方YouTube频道
+- [Rust实战教程](https://www.bilibili.com/video/BV1hp4y1k7SV) - B站上的Rust系列教程
 
 ### 工具推荐
-- [Rust Playground](https://play.rust-lang.org/) - 在线Rust编程环境
-- [VS Code + Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer) - 推荐的开发环境
-- [Rustfmt](https://github.com/rust-lang/rustfmt) - 代码格式化工具
-- [Clippy](https://github.com/rust-lang/rust-clippy) - 代码质量检查工具
-- [Miri](https://github.com/rust-lang/miri) - 未定义行为检测器和Rust解释器
+- [Rust Playground](https://play.rust-lang.org/) - 在线Rust编程环境，无需本地安装
+- [VS Code + Rust Analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer) - 推荐的集成开发环境，提供智能代码补全和错误检查
+- [Rustfmt](https://github.com/rust-lang/rustfmt) - 自动代码格式化工具，保持代码风格一致性
+- [Clippy](https://github.com/rust-lang/rust-clippy) - 代码质量检查工具，帮助发现潜在问题和优化机会
+- [Miri](https://github.com/rust-lang/miri) - 未定义行为检测器和Rust解释器，帮助识别内存安全问题
 
 ---
 
