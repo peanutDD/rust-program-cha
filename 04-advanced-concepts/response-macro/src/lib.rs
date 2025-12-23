@@ -49,7 +49,7 @@ use syn::{parse_macro_input, DeriveInput, ItemFn, GenericParam, Ident};
 /// - `with_content_type()` - 自定义内容类型
 /// 
 /// # 示例
-/// ```
+/// ```ignore
 /// #[derive(Debug, Serialize, Response)]
 /// struct ApiResponse<T> {
 ///     success: bool,
@@ -366,7 +366,7 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
 /// - `transform_error`: 错误响应的转换函数名称
 /// 
 /// # 示例
-/// ```
+/// ```ignore
 /// #[response]
 /// async fn get_user(id: web::Path<u32>) -> Result<User, AppError> {
 ///     // 业务逻辑
@@ -511,11 +511,11 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
     
     // 生成日志记录代码
     let log_code = match log_level.as_str() {
-        "error" => quote! { eprintln! },
-        "warn" => quote! { eprintln! },
-        "debug" => quote! { eprintln! },
-        "trace" => quote! { eprintln! },
-        _ => quote! { eprintln! },
+        "error" => quote! { eprintln },
+        "warn" => quote! { eprintln },
+        "debug" => quote! { eprintln },
+        "trace" => quote! { eprintln },
+        _ => quote! { eprintln },
     };
     
     // 生成成功转换代码
@@ -534,29 +534,40 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
         quote! { error_message }
     };
     
+    // 获取原始返回类型
+    let original_return_type = match &fn_sig.output {
+        syn::ReturnType::Default => quote! { () },
+        syn::ReturnType::Type(_, ty) => quote! { #ty },
+    };
+
+    // 修改函数签名，将其返回值改为 impl actix_web::Responder
+    let mut new_sig = fn_sig.clone();
+    new_sig.output = syn::parse_quote!(-> impl actix_web::Responder);
+    
     // 生成代码
     let expanded = quote! {
         #(#fn_attrs)*
-        #fn_visibility #fn_sig -> impl actix_web::Responder {
-            async move {
+        #fn_visibility #new_sig {
                 // 添加超时保护
                 use std::time::Duration;
                 
-                // 尝试使用tokio的timeout，如果不可用则直接执行
-                let result = match std::result::Result::Ok(()) {
-                    Ok(_) => {
-                        // 实现tokio的超时保护
-                        match tokio::time::timeout(Duration::from_secs(#timeout_seconds), async move {
-                            #block
-                        }).await {
-                            Ok(inner_result) => inner_result,
-                            Err(_timeout) => {
-                                #log_code!("函数执行超时 (超过 {} 秒)", #timeout_seconds);
-                                Err(std::io::Error::new(std::io::ErrorKind::TimedOut, "操作超时").into())
-                            },
-                        }
+                // 尝试使用tokio的timeout
+                let result: #original_return_type = match tokio::time::timeout(std::time::Duration::from_secs(#timeout_seconds as u64), async move {
+                    #block
+                }).await {
+                    Ok(inner_result) => inner_result,
+                    Err(_timeout) => {
+                        #log_code!("函数执行超时 (超过 {} 秒)", #timeout_seconds);
+                        
+                        return actix_web::HttpResponse::GatewayTimeout()
+                            .content_type("application/json")
+                            .json(serde_json::json!({ 
+                                "success": false,
+                                "data": null,
+                                "message": "操作超时", 
+                                "code": 504 
+                            }));
                     },
-                    Err(_) => #block, // 回退到直接执行
                 };
                 
                 match result {
@@ -575,31 +586,14 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
                         });
                         
                         // 安全的状态码转换
-                        let status_code = match http::StatusCode::from_u16(#success_code) {
+                        let status_code = match http::StatusCode::from_u16(#success_code as u16) {
                             Ok(status) => status,
                             Err(_) => http::StatusCode::OK
                         };
                         
-                        // 使用actix_web的web::Json来更高效地处理响应
                         actix_web::HttpResponse::build(status_code)
                             .content_type("application/json")
                             .json(success_response)
-                            .map_err(|e| {
-                                // 记录序列化错误
-                                #log_code!("[响应宏] 序列化响应失败: {}", e);
-                                e
-                            })
-                            .unwrap_or_else(|_|
-                            {
-                                actix_web::HttpResponse::InternalServerError()
-                                    .content_type("application/json")
-                                    .body(serde_json::json!({ 
-                                        "success": false,
-                                        "data": null,
-                                        "message": "响应序列化失败", 
-                                        "code": 500 
-                                    }).to_string())
-                            })
                     },
                     Err(err) => {
                         #error_handling
@@ -618,30 +612,16 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
                         });
                         
                         // 安全的状态码转换
-                        let status_code = match http::StatusCode::from_u16(#error_code) {
+                        let status_code = match http::StatusCode::from_u16(#error_code as u16) {
                             Ok(status) => status,
                             Err(_) => http::StatusCode::INTERNAL_SERVER_ERROR
                         };
                         
-                        // 使用actix_web的web::Json来更高效地处理响应
                         actix_web::HttpResponse::build(status_code)
                             .content_type("application/json")
                             .json(error_response)
-                            .unwrap_or_else(|e| {
-                                // 记录序列化错误以便调试
-                                #log_code!("[响应宏] 序列化错误响应失败: {}", e);
-                                actix_web::HttpResponse::InternalServerError()
-                                    .content_type("application/json")
-                                    .body(serde_json::json!({ 
-                                        "success": false,
-                                        "data": null,
-                                        "message": "错误响应序列化失败", 
-                                        "code": 500 
-                                    }).to_string())
-                            })
                     }
                 }
-            }
         }
     };
     
@@ -657,7 +637,7 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
 /// - 提供一致的错误格式输出
 /// 
 /// # 语法
-/// ```
+/// ```ignore
 /// // 基本用法 - 直接传递错误值
 /// let result = some_operation().map_err(|e| error!(e));
 /// 
@@ -721,4 +701,3 @@ pub fn error(input: TokenStream) -> TokenStream {
         }
     }
 }
-

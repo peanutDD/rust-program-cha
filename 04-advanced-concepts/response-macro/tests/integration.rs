@@ -1,13 +1,19 @@
-use actix_web::{web, App, HttpRequest};use serde::{Deserialize, Serialize};use response_macro::{ApiError, response};use std::time::Duration;use tokio::time::sleep;
+use serde::{Deserialize, Serialize};
+use response_macro::response;
+use response_macro_core::ApiError;
+use std::time::Duration;
+use tokio::time::sleep;
 
-// 测试结构体#[derive(Debug, Serialize, Deserialize)]
+// 测试结构体
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct TestUser {
     id: u32,
     name: String,
     email: String,
 }
 
-// 自定义错误类型#[derive(Debug)]
+// 自定义错误类型
+#[derive(Debug)]
 struct AppError {
     message: String,
     code: u16,
@@ -21,7 +27,8 @@ impl std::fmt::Display for AppError {
 
 impl std::error::Error for AppError {}
 
-// 测试ApiError基本功能#[tokio::test]
+// 测试ApiError基本功能
+#[tokio::test]
 async fn test_api_error_basic() {
     // 测试成功响应
     let success = ApiError::success("操作成功", 200);
@@ -36,7 +43,8 @@ async fn test_api_error_basic() {
     assert_eq!(error.message, "请求参数错误");
 }
 
-// 测试ApiError链式调用#[tokio::test]
+// 测试ApiError链式调用
+#[tokio::test]
 async fn test_api_error_chain() {
     let error = ApiError::internal_error("服务器错误")
         .with_details(Some("数据库连接失败"))
@@ -50,7 +58,8 @@ async fn test_api_error_chain() {
     assert_eq!(error.trace_id.unwrap(), "trace-123");
 }
 
-// 测试ApiError数据字段#[tokio::test]
+// 测试ApiError数据字段
+#[tokio::test]
 async fn test_api_error_data() {
     let user = TestUser {
         id: 1,
@@ -70,7 +79,8 @@ async fn test_api_error_data() {
     assert_eq!(data["name"].as_str().unwrap(), "测试用户");
 }
 
-// 测试ApiError从状态码创建#[tokio::test]
+// 测试ApiError从状态码创建
+#[tokio::test]
 async fn test_api_error_from_status_code() {
     let not_found = ApiError::from_status_code(404);
     assert!(!not_found.success);
@@ -83,7 +93,8 @@ async fn test_api_error_from_status_code() {
     assert_eq!(internal_error.message, "服务器内部错误");
 }
 
-// 测试response宏的基本功能#[response]
+// 测试response宏的基本功能
+#[response]
 async fn test_response_basic() -> Result<TestUser, AppError> {
     let user = TestUser {
         id: 1,
@@ -93,15 +104,17 @@ async fn test_response_basic() -> Result<TestUser, AppError> {
     Ok(user)
 }
 
-// 测试response宏的错误处理#[response(error_code = 400)]
+// 测试response宏的错误处理
+#[response(error_code = 400)]
 async fn test_response_error() -> Result<TestUser, AppError> {
     Err(AppError {
-        message: "测试错误",
+        message: "测试错误".to_string(),
         code: 400,
     })
 }
 
-// 测试response宏的超时功能#[response(timeout_seconds = 1)]
+// 测试response宏的超时功能
+#[response(timeout_seconds = 1)]
 async fn test_response_timeout() -> Result<TestUser, AppError> {
     // 睡眠2秒，触发超时
     sleep(Duration::from_secs(2)).await;
@@ -121,7 +134,8 @@ fn transform_error(message: String) -> String {
     format!("转换后的错误: {}", message)
 }
 
-// 测试响应转换功能#[response(transform_success = "transform_success", transform_error = "transform_error")]
+// 测试响应转换功能
+#[response(transform_success = "transform_success", transform_error = "transform_error")]
 async fn test_response_transform(should_fail: bool) -> Result<TestUser, AppError> {
     if should_fail {
         Err(AppError { message: "需要转换的错误".to_string(), code: 400 })

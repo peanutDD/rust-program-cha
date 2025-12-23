@@ -1,8 +1,9 @@
-use response_macro::ApiError;
+use response_macro_core::ApiError;
 use serde_json::json;
 use std::error::Error;
 
-// 测试ApiError的基本构造函数#[test]
+// 测试ApiError的基本构造函数
+#[test]
 fn test_api_error_constructors() {
     // 测试new构造函数
     let error = ApiError::new(404, "资源不存在");
@@ -28,7 +29,8 @@ fn test_api_error_constructors() {
     assert_eq!(success_with_data.data.unwrap(), data);
 }
 
-// 测试ApiError的快捷方法#[test]
+// 测试ApiError的快捷方法
+#[test]
 fn test_api_error_shortcut_methods() {
     // 测试客户端错误方法
     let bad_request = ApiError::bad_request("参数错误");
@@ -51,7 +53,8 @@ fn test_api_error_shortcut_methods() {
     assert_eq!(service_unavailable.code, 503);
 }
 
-// 测试ApiError的实用方法#[test]
+// 测试ApiError的实用方法
+#[test]
 fn test_api_error_utils() {
     let success = ApiError::success("成功", 200);
     assert!(success.is_success());
@@ -64,7 +67,8 @@ fn test_api_error_utils() {
     assert_eq!(error.get_code(), 400);
 }
 
-// 测试ApiError的错误转换#[test]
+// 测试ApiError的错误转换
+#[test]
 fn test_api_error_from_error() {
     // 自定义错误类型
     #[derive(Debug)]
@@ -85,14 +89,15 @@ fn test_api_error_from_error() {
     }
     
     let test_error = TestError { message: "测试错误".to_string() };
-    let api_error = ApiError::from_error(test_error, 400);
+    let api_error = ApiError::from_error(400, test_error);
     
     assert!(!api_error.success);
     assert_eq!(api_error.code, 400);
     assert_eq!(api_error.message, "测试错误");
 }
 
-// 测试ApiError的格式化输出#[test]
+// 测试ApiError的格式化输出
+#[test]
 fn test_api_error_display() {
     let success = ApiError::success("操作成功", 200);
     let success_str = format!("{}", success);
@@ -109,7 +114,8 @@ fn test_api_error_display() {
     assert!(error_str.contains("Details"));
 }
 
-// 测试ApiError的时间戳功能#[test]
+// 测试ApiError的时间戳功能
+#[test]
 fn test_api_error_timestamp() {
     let error = ApiError::new(400, "错误");
     assert!(error.timestamp > 0);

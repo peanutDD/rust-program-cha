@@ -96,26 +96,41 @@ impl ApiError {
         }
     }
     
-    pub fn with_details(mut self, details: Option<String>) -> Self {
-        self.details = details.map(|d| serde_json::Value::String(d));
+    pub fn with_details(mut self, details: Option<&str>) -> Self {
+        self.details = details.map(|d| serde_json::Value::String(d.to_string()));
         self
     }
     
     pub fn with_data<T: serde::Serialize>(mut self, data: Option<T>) -> Self {
-        self.data = data.map(|d| serde_json::to_value(d).ok()).flatten();
+        self.data = data.and_then(|d| serde_json::to_value(d).ok());
         self
     }
     
-    pub fn with_trace(mut self) -> Self {
-        let trace_id = format!("{:x}", random::<u32>());
-        self.trace_id = Some(trace_id);
+    pub fn with_trace(mut self, trace_id: Option<&str>) -> Self {
+        let tid = match trace_id {
+            Some(id) => id.to_string(),
+            None => format!("{:x}", random::<u32>()),
+        };
+        self.trace_id = Some(tid);
         self
+    }
+    
+    pub fn success(message: &str, code: u16) -> Self {
+        let mut err = Self::new(code, message);
+        err.success = true;
+        err
+    }
+
+    pub fn success_with_data<T: serde::Serialize>(data: T, code: u16) -> Self {
+        let mut err = Self::success("success", code);
+        err.data = serde_json::to_value(data).ok();
+        err
     }
     
     pub fn from_error<E: std::fmt::Display>(code: u16, error: E) -> Self {
         Self::new(code, &error.to_string())
-            .with_details(Some(error.to_string()))
-            .with_trace()
+            .with_details(Some(&error.to_string()))
+            .with_trace(None)
     }
     
     pub fn from_status_code(code: u16) -> Self {
@@ -151,6 +166,18 @@ impl ApiError {
     
     pub fn service_unavailable(message: &str) -> Self {
         Self::new(503, message)
+    }
+
+    pub fn is_success(&self) -> bool {
+        self.success
+    }
+
+    pub fn get_message(&self) -> &str {
+        &self.message
+    }
+
+    pub fn get_code(&self) -> u16 {
+        self.code
     }
 }
 
