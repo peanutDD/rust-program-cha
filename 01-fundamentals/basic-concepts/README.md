@@ -4,33 +4,57 @@
 
 ## 目录结构
 
-### 核心学习文件
-- **rust_concepts_examples.rs**: 包含 Rust 核心概念的详细示例代码
-- **rust_exercises.rs**: 配套练习题，帮助巩固所学知识
-
-### 分析与总结文档
-- **ANALYSIS.md**: 代码分析文档
-- **COMPARISON_ANALYSIS.md**: 对比分析文档
-- **REFACTORING_ANALYSIS.md**: 重构分析文档
-- **REFACTORING_SUMMARY.md**: 重构总结文档
-- **RUST_CONCEPTS_GUIDE.md**: Rust 概念指南
-
-### 源代码目录
-- **src/**: 包含多个示例实现
-  - **main.rs**: 主示例程序
-  - **enterprise_main.rs**: 企业级实现示例
-  - **optimized_main.rs**: 优化版本实现
-  - **refactored_main.rs**: 重构版本实现
-
-### 额外学习资源
-- **Rust额外知识点汇总/**: 包含多个深入主题的详细讲解
-  - Box 智能指针与引用操作详解
-  - Option类型全面解析
-  - Rust所有权详解
-  - 错误处理库对比与分析
-  - 高级特性：结构体、枚举与模式匹配
-  - 内存布局可视化分析
-  - 生命周期与泛型深入解析
+```
+basic-concepts/
+├── 📁 docs/                          # 文档资料
+│   ├── guides/                       # 学习指南
+│   │   └── RUST_CONCEPTS_GUIDE.md    # Rust 概念完整指南
+│   ├── analysis/                     # 代码分析文档
+│   │   ├── ANALYSIS.md               # 基础代码分析
+│   │   ├── COMPARISON_ANALYSIS.md    # 对比分析
+│   │   ├── REFACTORING_ANALYSIS.md   # 重构分析
+│   │   └── REFACTORING_SUMMARY.md    # 重构总结
+│   └── advanced-topics/              # 高级主题深入讲解
+│       ├── smart-pointers/           # 智能指针专题
+│       │   ├── Box 智能指针与引用操作详解.md
+│       │   ├── Box<T>深入解析.md
+│       │   ├── Rust Box 智能指针全方位讲解.md
+│       │   ├── Rust 中 Vec<Box> 的内存布局深度解析.md
+│       │   └── Rust 递归链表实现详细解析.md
+│       ├── error-handling/           # 错误处理专题
+│       │   ├── Rust anyhow 错误处理库详解.md
+│       │   ├── Rust错误处理不足之处.md
+│       │   ├── Rust错误处理中的上下文与Backtrace问题.md
+│       │   ├── Rust错误处理库对比与边界划分.md
+│       │   └── Rust错误类型泛型爆炸.md
+│       ├── ownership-memory/         # 所有权与内存专题
+│       │   ├── Rust 所有权.md
+│       │   ├── 各数据内存可视化布局.md
+│       │   ├── 各数据内存可视化布局（重构）.md
+│       │   └── rust中胖指针 fat-pointer详解.md
+│       ├── advanced-features/        # 高级特性专题
+│       │   ├── Rust高级特性详解：结构体、枚举与模式匹配.md
+│       │   ├── Rust高级特性详解：结构体、枚举与模式匹配2.md
+│       │   ├── Rust_struct_enum_pattern_matching.md
+│       │   ├── option类型全面解析.md
+│       │   ├── 生命周期消除.md
+│       │   └── 编程语言泛型与元编程实现机制深度解析.md
+│       ├── analysis-guides/          # 深度分析指南
+│       │   ├── refs_borrowing_analysis.md
+│       │   ├── refs_borrowing_in_depth_analysis.md
+│       │   └── rust_performance_optimization_guide.md
+│       └── images/                   # 文档配图资源
+├── 📁 examples/                      # 示例代码
+│   ├── rust_concepts_examples.rs     # Rust 核心概念详细示例
+│   └── rust_exercises.rs             # 配套练习题
+├── 📁 src/                           # 主程序源代码
+│   ├── main.rs                       # 基础示例程序
+│   ├── enterprise_main.rs            # 企业级实现示例
+│   ├── optimized_main.rs             # 性能优化版本
+│   └── refactored_main.rs            # 重构改进版本
+├── Cargo.toml                        # 项目配置文件
+└── rustfmt.toml                      # 代码格式化配置
+```
 
 ## 学习内容
 
@@ -119,7 +143,7 @@ cargo run --bin refactored_main
 
 ### 完成练习
 
-1. 打开 `rust_exercises.rs` 文件
+1. 打开 `examples/rust_exercises.rs` 文件
 2. 找到带有 `TODO` 注释的部分
 3. 根据练习要求实现代码
 4. 运行练习验证结果：
@@ -128,6 +152,12 @@ cargo run --bin refactored_main
 # 编译并运行练习代码
 cargo run --example rust_exercises
 ```
+
+### 浏览文档
+
+- **快速开始**：阅读 `docs/guides/RUST_CONCEPTS_GUIDE.md` 获取完整的概念指南
+- **代码分析**：查看 `docs/analysis/` 目录了解代码优化过程
+- **深入学习**：浏览 `docs/advanced-topics/` 下的各个专题深入理解 Rust 特性
 
 ## 学习建议
 
