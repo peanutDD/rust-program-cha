@@ -234,3 +234,12 @@ pub fn associated_functions_demo() {
         Err(e) => println!("Failed to parse integer: {}", e),
     }
 }
+
+/// 完全限定语法主入口函数
+pub fn fully_qualified_syntax_analysis() {
+    println!("\n=== 3. 完全限定语法分析 ===");
+    
+    basic_fully_qualified_syntax_demo();
+    disambiguation_demo();
+    associated_functions_demo();
+}

@@ -1,7 +1,7 @@
 //! Core types and utilities for response-macro
 
-use actix_web::{http::StatusCode, HttpRequest, HttpResponse, body::BoxBody};
-use serde::{Serialize, Deserialize, ser::{SerializeStruct, SerializeMap}};
+use actix_web::http::StatusCode;
+use serde::{Serialize, Deserialize, ser::SerializeMap};
 use serde_json::json;
 use std::fmt;
 use std::error::Error;
@@ -283,7 +283,7 @@ impl std::fmt::Display for ContentFormat {
 impl actix_web::Responder for ApiError {
     type Body = actix_web::body::BoxBody;
 
-    fn respond_to(self, request: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
+    fn respond_to(self, _request: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
         // 确保状态码转换正确
         let status = match StatusCode::from_u16(self.code) {
             Ok(status_code) => status_code,
@@ -308,14 +308,12 @@ impl actix_web::Responder for ApiError {
         
         match serde_json::to_string(&response_body) {
             Ok(body) => {
-                // 创建content_type的let绑定，避免临时值生命周期问题
-                let content_type = "application/json";
+                // 使用链式调用构建响应
                 let mut response = actix_web::HttpResponse::build(status);
-                response = response.content_type(content_type);
+                response.content_type("application/json");
                 // 始终添加跟踪ID到响应头
                 if let Some(trace) = trace_id {
-                    // 创建trace_id的let绑定，避免临时值生命周期问题
-                    response = response.append_header(("X-Trace-Id", trace));
+                    response.append_header(("X-Trace-Id", trace));
                 }
                 response.body(body)
             },
@@ -328,12 +326,10 @@ impl actix_web::Responder for ApiError {
                 
                 let fallback_body = format!("{{\"success\": false, \"message\": \"Failed to process error response\", \"code\": 500, \"details\": \"{}\", \"timestamp\": {}}}", details, timestamp);
                 
-                // 创建content_type的let绑定
-                let content_type = "application/json";
+                // 使用链式调用构建响应
                 let mut response = actix_web::HttpResponse::build(StatusCode::INTERNAL_SERVER_ERROR);
-                response = response.content_type(content_type);
-                response
-                    .body(fallback_body)
+                response.content_type("application/json");
+                response.body(fallback_body)
             }
         }
     }
@@ -346,19 +342,17 @@ impl<T: Serialize> actix_web::Responder for WithHeader<T> {
     fn respond_to(self, _request: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
         match serde_json::to_string(&self.inner) {
             Ok(body) => {
-                // 创建content_type的let绑定，避免临时值生命周期问题
-                let content_type = "application/json";
+                // 使用链式调用构建响应
                 let mut response = actix_web::HttpResponse::Ok();
-                response = response.content_type(content_type);
+                response.content_type("application/json");
                 
                 // 安全地添加所有头信息
                 for (name_str, value_str) in self.headers {
-                    // 使用辅助函数安全创建头信息，避免临时值生命周期问题
+                    // 使用辅助函数安全创建头信息
                     let name_clone = name_str.clone();
                     let value_clone = value_str.clone();
                     if let (Some(header_name), Some(header_value)) = (create_header_name(&name_clone), create_header_value(&value_clone)) {
-                        // 直接使用header_value而不是引用
-                        response = response.append_header((header_name, header_value));
+                        response.append_header((header_name, header_value));
                     }
                 }
                 
@@ -370,9 +364,8 @@ impl<T: Serialize> actix_web::Responder for WithHeader<T> {
                 let error_body = serde_json::to_string(&error_response).unwrap_or_else(|_| "{\"success\": false, \"message\": \"Failed to process error response\"}".to_string());
                 
                 let mut response = actix_web::HttpResponse::InternalServerError();
-                response = response.content_type("application/json");
-                response
-                    .body(error_body)
+                response.content_type("application/json");
+                response.body(error_body)
             }
         }
     }
@@ -388,10 +381,9 @@ impl<T: Serialize> actix_web::Responder for WithStatus<T> {
         // 直接使用JSON格式，简化实现
         match serde_json::to_string(&self.inner) {
             Ok(body) => {
-                // 创建content_type的let绑定，避免临时值生命周期问题
-                let content_type = "application/json";
+                // 使用链式调用构建响应
                 let mut response = actix_web::HttpResponse::build(status);
-                response = response.content_type(content_type);
+                response.content_type("application/json");
                 
                 // 安全地添加所有头信息
                 for (name_str, value_str) in self.headers {
@@ -399,8 +391,7 @@ impl<T: Serialize> actix_web::Responder for WithStatus<T> {
                     let name_clone = name_str.clone();
                     let value_clone = value_str.clone();
                     if let (Some(header_name), Some(header_value)) = (create_header_name(&name_clone), create_header_value(&value_clone)) {
-                        // 直接使用header_value而不是引用
-                        response = response.append_header((header_name, header_value));
+                        response.append_header((header_name, header_value));
                     }
                 }
                 
@@ -412,9 +403,8 @@ impl<T: Serialize> actix_web::Responder for WithStatus<T> {
                 let error_body = serde_json::to_string(&error_response).unwrap_or_else(|_| "{\"success\": false, \"message\": \"Failed to process error response\"}".to_string());
                 
                 let mut response = actix_web::HttpResponse::InternalServerError();
-                response = response.content_type("application/json");
-                response
-                    .body(error_body)
+                response.content_type("application/json");
+                response.body(error_body)
             }
         }
     }
@@ -427,10 +417,10 @@ impl<T: Serialize> actix_web::Responder for WithContentType<T> {
     fn respond_to(self, _request: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
         match serde_json::to_string(&self.inner) {
             Ok(body) => {
-                // 创建content_type的let绑定，避免临时值生命周期问题
+                // 使用链式调用构建响应
                 let content_type_value = self.content_type.clone();
                 let mut response = actix_web::HttpResponse::Ok();
-                response = response.content_type(content_type_value);
+                response.content_type(content_type_value);
                 
                 // 安全地添加所有头信息
                 for (name_str, value_str) in self.headers {
@@ -438,8 +428,7 @@ impl<T: Serialize> actix_web::Responder for WithContentType<T> {
                     let name_clone = name_str.clone();
                     let value_clone = value_str.clone();
                     if let (Some(header_name), Some(header_value)) = (create_header_name(&name_clone), create_header_value(&value_clone)) {
-                        // 直接使用header_value而不是引用
-                        response = response.append_header((header_name, header_value));
+                        response.append_header((header_name, header_value));
                     }
                 }
                 
@@ -457,9 +446,8 @@ impl<T: Serialize> actix_web::Responder for WithContentType<T> {
                 let error_body = serde_json::to_string(&error_response).unwrap_or_else(|_| "{\"success\": false, \"message\": \"Failed to process error response\"}".to_string());
                 
                 let mut response = actix_web::HttpResponse::InternalServerError();
-                response = response.content_type("application/json");
-                response
-                    .body(error_body)
+                response.content_type("application/json");
+                response.body(error_body)
             }
         }
     }

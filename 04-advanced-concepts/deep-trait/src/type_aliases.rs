@@ -3,7 +3,6 @@
 //! 本模块展示了 Rust 中类型别名的定义和使用，以及特征对象的高级特性和限制。
 
 use std::fmt::{Debug, Display};
-use std::ops::Add;
 
 /// 演示类型别名的使用
 pub fn demonstrate_type_aliases() {
@@ -39,7 +38,6 @@ pub fn demonstrate_type_aliases() {
     
     // 4. 特征对象类型别名
     type AnyDisplay = Box<dyn Display>;
-    type AnyDebugDisplay = Box<dyn Debug + Display>;
     
     let values: Vec<AnyDisplay> = vec![
         Box::new(42),
@@ -49,6 +47,21 @@ pub fn demonstrate_type_aliases() {
     
     for value in values {
         println!("Value: {}", value);
+    }
+    
+    // 如果需要组合多个非 auto trait，需要创建一个新特征
+    trait DebugDisplay: Debug + Display {}
+    impl<T: Debug + Display> DebugDisplay for T {}
+    
+    type AnyDebugDisplay = Box<dyn DebugDisplay>;
+    
+    let debug_values: Vec<AnyDebugDisplay> = vec![
+        Box::new(42),
+        Box::new("Combined traits".to_string()),
+    ];
+    
+    for value in debug_values {
+        println!("Debug + Display value: {}", value);
     }
 }
 
@@ -73,11 +86,13 @@ pub fn demonstrate_never_type() {
     println!("\n--- Never 类型 (!) 演示 ---");
     
     // 1. panic 函数返回 !
+    #[allow(dead_code)]
     fn always_panic() -> ! {
         panic!("This function never returns!");
     }
     
     // 2. Never 类型在枚举中的应用
+    #[allow(dead_code)]
     enum Message {
         Quit,
         Move { x: i32, y: i32 },
@@ -85,10 +100,13 @@ pub fn demonstrate_never_type() {
         ChangeColor(i32, i32, i32),
     }
     
-    // 3. 类型转换示例
-    let result: Result<(), !> = Ok(());
-    let () = result.unwrap();
-    println!("Successfully unwrapped Result with ! error type");
+    // 3. Never 类型可以转换为任何类型
+    // 注意：Result<(), !> 需要 never_type feature，这里展示概念
+    // let result: Result<(), !> = Ok(());
+    // let () = result.unwrap();
+    
+    println!("Never 类型 (!) 表示永远不会返回的函数");
+    println!("示例：panic!、loop {{}}、std::process::exit() 等");
 }
 
 /// 定义对象安全的特征
@@ -111,8 +129,14 @@ pub trait Loggable {
     fn log(&self) -> String;
 }
 
+/// 创建一个组合特征来支持多特征对象
+pub trait PrintableLoggable: Printable + Loggable {}
+
+/// 为所有实现了 Printable 和 Loggable 的类型自动实现 PrintableLoggable
+impl<T: Printable + Loggable> PrintableLoggable for T {}
+
 /// 多特征对象的组合
-pub type PrintableLogger = Box<dyn Printable + Loggable>;
+pub type PrintableLogger = Box<dyn PrintableLoggable>;
 
 /// 演示特征对象的生命周期
 pub fn demonstrate_trait_object_lifetimes() {

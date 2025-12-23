@@ -4,7 +4,6 @@
 //! 包括基础用法、类型安全应用、为外部类型实现特征和高级应用。
 
 use std::collections::HashMap;
-use std::fmt::Display;
 use std::marker::PhantomData;
 use std::ops::Deref;
 
@@ -406,4 +405,14 @@ pub fn advanced_newtype_demo() {
         absolute_zero_c.value(), 
         absolute_zero_c.to_kelvin().value()
     );
+}
+
+/// Newtype 模式主入口函数
+pub fn newtype_pattern_analysis() {
+    println!("\n=== 5. newtype 模式分析 ===");
+    
+    basic_newtype_demo();
+    type_safe_newtype_demo();
+    external_type_traits_demo();
+    advanced_newtype_demo();
 }

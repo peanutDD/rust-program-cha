@@ -543,3 +543,12 @@ pub fn supertraits_practical_demo() {
 
     render_any_shape(&circle);
 }
+
+/// 超特征主入口函数
+pub fn supertraits_analysis() {
+    println!("\n=== 4. 超特征分析 ===");
+    
+    basic_supertraits_demo();
+    multiple_supertraits_demo();
+    supertraits_practical_demo();
+}

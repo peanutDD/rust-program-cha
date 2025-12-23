@@ -12,7 +12,7 @@
 //! - 自动内容类型协商和序列化优化
 //! 
 //! ## 典型用例
-//! ```
+//! ```ignore
 //! #[derive(Debug, Serialize, Response)]
 //! struct ApiResponse<T> {
 //!     success: bool,
@@ -28,525 +28,8 @@
 //! ```
 
 use proc_macro::TokenStream;
-use quote::{quote, format_ident};
-use syn::{parse_macro_input, DeriveInput, ItemFn, GenericParam, AttributeArgs, Lit, NestedMeta, Meta, MetaNameValue, Type, Ident, Expr, parse};
-use proc_macro_error::{proc_macro_error, abort};
-use std::fmt::Write;
-use std::borrow::Cow;
-use std::error::Error;
-use std::fmt::{self, Display, Debug};
-
-// 导入必要的serde和actix_web相关特性
-use serde::{Serialize, Deserialize};
-
-/// API 响应错误结构体
-/// 
-/// 提供统一的错误响应格式和错误处理功能，支持丰富的链式调用。
-/// 
-/// # 功能特性
-/// - 统一的响应格式（包含success、message、code、data、details字段）
-/// - 丰富的快捷方法创建不同类型的响应
-/// - 链式调用API进行响应构建
-/// - 自动错误转换和消息提取
-/// - 支持自定义状态码和错误详情
-/// - 集成错误追踪功能
-/// - 支持从Result直接转换
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ApiError {
-    /// 操作是否成功
-    pub success: bool,
-    /// 响应消息
-    pub message: String,
-    /// 状态码
-    pub code: u16,
-    /// 可选的详细错误信息
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub details: Option<serde_json::Value>,
-    /// 响应数据（可选）
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub data: Option<serde_json::Value>,
-    /// 错误追踪信息（可选，仅在调试模式下）
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub trace_id: Option<String>,
-    /// 时间戳
-    pub timestamp: u64
-}
-
-// 添加JsonSchema支持，用于API文档生成和数据验证
-#[cfg(feature = "schema")]
-impl schemars::JsonSchema for ApiError {
-    fn schema_name() -> String {
-        "ApiError".to_string()
-    }
-    
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-        let mut schema = gen.subschema_for::<Self>();
-        if let Some(obj) = schema.as_object_mut() {
-            // 增强schema描述
-            obj.description = Some("API响应统一格式，支持成功和错误响应。".to_string());
-            
-            // 添加字段描述
-            if let Some(properties) = obj.properties.as_mut() {
-                if let Some(success_prop) = properties.get_mut("success") {
-                    if let Some(obj) = success_prop.as_object_mut() {
-                        obj.description = Some("表示操作是否成功".to_string());
-                    }
-                }
-                if let Some(code_prop) = properties.get_mut("code") {
-                    if let Some(obj) = code_prop.as_object_mut() {
-                        obj.description = Some("HTTP状态码".to_string());
-                    }
-                }
-            }
-        }
-        schema
-    }
-}
-
-/// 为 ApiError 实现各种便捷构造函数和链式方法
-/// 注意：不能为外部类型（foreign type）定义 inherent impl，因此这里是为本地定义的 ApiError 类型实现方法
-impl ApiError {
-    /// 创建新的ApiError实例
-    pub fn new(code: u16, message: &str) -> Self {
-        Self {
-            success: false,
-            message: message.to_string(),
-            code,
-            details: None,
-            data: None,
-            trace_id: None,
-            timestamp: std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map_or(0, |d| d.as_secs()),
-        }
-    }
-    
-    /// 添加详细错误信息
-    pub fn with_details(mut self, details: Option<String>) -> Self {
-        self.details = details.map(|d| serde_json::Value::String(d));
-        self
-    }
-    
-    /// 添加响应数据
-    pub fn with_data<T: serde::Serialize>(mut self, data: Option<T>) -> Self {
-        self.data = data.map(|d| serde_json::to_value(d).ok()).flatten();
-        self
-    }
-    
-    /// 添加错误追踪信息
-    pub fn with_trace(mut self) -> Self {
-        // 生成简单的追踪ID
-        use rand::Rng;
-        let trace_id = format!("{:x}", rand::thread_rng().gen_range(100000..999999));
-        self.trace_id = Some(trace_id);
-        self
-    }
-    
-    /// 从错误类型创建ApiError
-    pub fn from_error<E: std::fmt::Display>(code: u16, error: E) -> Self {
-        Self::new(code, &error.to_string())
-            .with_details(Some(error.to_string()))
-            .with_trace()
-    }
-    
-    /// 创建带详细信息的ApiError实例
-    pub fn with_serialized_details(code: u16, message: &str, details: impl serde::Serialize) -> Self {
-        let details_value = serde_json::to_value(details).ok();
-        Self {
-            success: false,
-            message: message.to_string(),
-            code,
-            details: details_value,
-            data: None,
-            trace_id: None,
-            timestamp: std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map_or(0, |d| d.as_secs()),
-        }
-    }
-    
-    /// 从Result转换为ApiError
-    pub fn from_result<T: serde::Serialize, E: std::fmt::Display>(
-        result: Result<T, E>,
-        success_code: u16,
-        error_code: u16,
-    ) -> Self {
-        match result {
-            Ok(data) => Self::new(success_code, "操作成功").with_data(Some(data)),
-            Err(err) => Self::from_error(error_code, err),
-        }
-    }
-    
-    /// 根据HTTP状态码创建标准错误响应
-    pub fn from_status_code(code: u16) -> Self {
-        match code {
-            400 => Self::bad_request("请求参数错误"),
-            401 => Self::unauthorized("未授权访问"),
-            403 => Self::forbidden("拒绝访问"),
-            404 => Self::not_found("资源不存在"),
-            405 => Self::new(405, "请求方法不允许"),
-            409 => Self::conflict("资源冲突"),
-            429 => Self::too_many_requests("请求过于频繁"),
-            500 => Self::internal_error("服务器内部错误"),
-            502 => Self::bad_gateway("网关错误"),
-            503 => Self::service_unavailable("服务不可用"),
-            504 => Self::new(504, "网关超时"),
-            _ => {
-                if code >= 400 && code < 500 {
-                    Self::new(code, "客户端错误")
-                } else if code >= 500 && code < 600 {
-                    Self::new(code, "服务器错误")
-                } else {
-                    Self::new(code, "操作成功")
-                }
-            }
-        }
-    }
-    
-    /// 创建400 Bad Request错误
-    pub fn bad_request(message: &str) -> Self {
-        Self::new(400, message)
-    }
-    
-    /// 创建401 Unauthorized错误
-    pub fn unauthorized(message: &str) -> Self {
-        Self::new(401, message)
-    }
-    
-    /// 创建403 Forbidden错误
-    pub fn forbidden(message: &str) -> Self {
-        Self::new(403, message)
-    }
-    
-    /// 创建404 Not Found错误
-    pub fn not_found(message: &str) -> Self {
-        Self::new(404, message)
-    }
-    
-    /// 创建409 Conflict错误
-    pub fn conflict(message: &str) -> Self {
-        Self::new(409, message)
-    }
-    
-    /// 创建429 Too Many Requests错误
-    pub fn too_many_requests(message: &str) -> Self {
-        Self::new(429, message)
-    }
-    
-    /// 创建500 Internal Server Error错误
-    pub fn internal_error(message: &str) -> Self {
-        Self::new(500, message)
-    }
-    
-    /// 创建502 Bad Gateway错误
-    pub fn bad_gateway(message: &str) -> Self {
-        Self::new(502, message)
-    }
-    
-    /// 创建503 Service Unavailable错误
-    pub fn service_unavailable(message: &str) -> Self {
-        Self::new(503, message)
-    }
-    
-    /// 检查是否为成功响应
-    pub fn is_success(&self) -> bool {
-        self.success
-    }
-    
-    /// 获取消息文本
-    pub fn get_message(&self) -> &str {
-        &self.message
-    }
-    
-    /// 获取状态码
-    pub fn get_code(&self) -> u16 {
-        self.code
-    }
-}
-
-impl Display for ApiError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.is_success() {
-            write!(f, "SuccessResponse(code={}, message={})", self.code, self.message)
-        } else {
-            let mut output = format!("ApiError(code={}, message={})", self.code, self.message);
-            if let Some(details) = &self.details {
-                match details {
-                    serde_json::Value::String(s) => output.push_str(&format!(" - Details: {}", s)),
-                    _ => output.push_str(&format!(" - Details: {}", details)),
-                }
-            }
-            if let Some(trace_id) = &self.trace_id {
-                output.push_str(&format!(" [Trace: {}]", trace_id));
-            }
-            write!(f, "{}", output)
-        }
-    }
-}
-
-impl Error for ApiError {
-    fn description(&self) -> &str {
-        &self.message
-    }
-    
-    fn source(&self) -> Option<&( dyn Error + 'static )> {
-        None
-    }
-}
-
-impl actix_web::Responder for ApiError {
-    type Body = actix_web::body::BoxBody;
-    
-    fn respond_to(self, _req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
-        // 安全的状态码转换
-        let status_code = match http::StatusCode::from_u16(self.code) {
-            Ok(status) => status,
-            Err(_) => {
-                if self.success {
-                    http::StatusCode::OK
-                } else {
-                    http::StatusCode::INTERNAL_SERVER_ERROR
-                }
-            }
-        };
-        
-        // 只支持JSON格式，移除内容协商
-        let (body, content_type) = {
-            // 尝试将self序列化为JSON
-            match serde_json::to_string(&self) {
-                Ok(json_body) => (json_body, "application/json".to_string()),
-                Err(e) => {
-                    // 序列化失败，返回错误文本
-                    let error_msg = format!("Error serializing response: {}", e);
-                    (error_msg, "text/plain".to_string())
-                }
-            }
-        };
-        
-        let mut response = actix_web::HttpResponse::build(status_code)
-            .content_type(&content_type);
-        
-        // 添加响应头
-        if let Some(trace_id) = &self.trace_id {
-            response = response.append_header(("X-Trace-Id", trace_id));
-        }
-        
-        response.body(actix_web::body::BoxBody::new(body))
-    }
-}
-
-/// 链式响应构建结构体 - 用于添加自定义HTTP头
-pub struct WithHeader<T> {
-    inner: T,
-    headers: Vec<(String, String)>,
-}
-
-impl<T> WithHeader<T>
-where
-    T: serde::Serialize,
-{
-    pub fn new(inner: T, name: impl Into<String>, value: impl Into<String>) -> Self {
-        let mut headers = Vec::new();
-        headers.push((name.into(), value.into()));
-        Self {
-            inner,
-            headers,
-        }
-    }
-    
-    /// 添加另一个HTTP头
-    pub fn with_header(mut self, name: impl Into<String>, value: impl Into<String>) -> Self {
-        self.headers.push((name.into(), value.into()));
-        self
-    }
-    
-    /// 覆盖默认状态码
-    pub fn with_status(self, status_code: u16) -> WithStatus<Self> {
-        WithStatus::new(self, status_code)
-    }
-    
-    /// 自定义内容类型
-    pub fn with_content_type(self, content_type: &str) -> WithContentType<Self> {
-        WithContentType::new(self, content_type)
-    }
-}
-
-impl<T> actix_web::Responder for WithHeader<T>
-where
-    T: serde::Serialize,
-{
-    type Body = actix_web::body::BoxBody;
-    
-    fn respond_to(self, _req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
-        let mut response = actix_web::HttpResponse::Ok();
-        
-        // 添加所有自定义头 - 安全处理
-        for (name_str, value_str) in self.headers {
-            // 使用辅助函数安全创建头信息，避免临时值生命周期问题
-            let name_clone = name_str.clone();
-            let value_clone = value_str.clone();
-            if let Ok(header_name) = actix_web::http::header::HeaderName::from_bytes(name_clone.as_bytes()) {
-                if let Ok(header_value) = actix_web::http::header::HeaderValue::from_str(&value_clone) {
-                    response = response.append_header((header_name, header_value));
-                }
-            }
-        }
-        
-        // 只支持JSON格式，移除内容协商
-        let (body, content_type) = {
-            // 尝试将self.inner序列化为JSON
-            match serde_json::to_string(&self.inner) {
-                Ok(json_body) => (json_body, "application/json".to_string()),
-                Err(e) => {
-                    // 序列化失败，返回错误文本
-                    let error_msg = format!("Error serializing response: {}", e);
-                    (error_msg, "text/plain".to_string())
-                }
-            }
-        };
-        
-        response
-            .content_type(&content_type)
-            .body(actix_web::body::BoxBody::new(body))
-    }
-}
-
-/// 链式响应构建结构体 - 用于覆盖默认状态码
-pub struct WithStatus<T> {
-    inner: T,
-    status_code: u16,
-}
-
-impl<T> WithStatus<T>
-where
-    T: serde::Serialize,
-{
-    pub fn new(inner: T, status_code: u16) -> Self {
-        Self {
-            inner,
-            status_code,
-        }
-    }
-    
-    /// 添加自定义HTTP头
-    pub fn with_header(self, name: impl Into<String>, value: impl Into<String>) -> WithHeader<Self> {
-        WithHeader::new(self, name, value)
-    }
-    
-    /// 自定义内容类型
-    pub fn with_content_type(self, content_type: &str) -> WithContentType<Self> {
-        WithContentType::new(self, content_type)
-    }
-}
-
-impl<T> actix_web::Responder for WithStatus<T>
-where
-    T: serde::Serialize,
-{
-    type Body = actix_web::body::BoxBody;
-    
-    fn respond_to(self, _req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
-        // 安全的状态码转换
-        let status_code = match http::StatusCode::from_u16(self.status_code) {
-            Ok(status) => status,
-            Err(_) => http::StatusCode::OK,
-        };
-        
-        // 只支持JSON格式，移除内容协商
-        let (body, content_type) = {
-            // 尝试将self.inner序列化为JSON
-            match serde_json::to_string(&self.inner) {
-                Ok(json_body) => (json_body, "application/json".to_string()),
-                Err(e) => {
-                    // 序列化失败，返回错误文本
-                    let error_msg = format!("Error serializing response: {}", e);
-                    (error_msg, "text/plain".to_string())
-                }
-            }
-        };
-        
-        actix_web::HttpResponse::build(status_code)
-            .content_type(&content_type)
-            .body(actix_web::body::BoxBody::new(body))
-    }
-}
-
-/// 链式响应构建结构体 - 用于自定义内容类型
-pub struct WithContentType<T> {
-    inner: T,
-    content_type: String,
-}
-
-impl<T> WithContentType<T>
-where
-    T: serde::Serialize,
-{
-    pub fn new(inner: T, content_type: &str) -> Self {
-        Self {
-            inner,
-            content_type: content_type.to_string(),
-        }
-    }
-    
-    /// 添加自定义HTTP头
-    pub fn with_header(self, name: &str, value: &str) -> WithHeader<Self> {
-        WithHeader::new(self, name, value)
-    }
-    
-    /// 覆盖默认状态码
-    pub fn with_status(self, status_code: u16) -> WithStatus<Self> {
-        WithStatus::new(self, status_code)
-    }
-}
-
-impl<T> actix_web::Responder for WithContentType<T>
-where
-    T: serde::Serialize,
-{
-    type Body = actix_web::body::BoxBody;
-    
-    fn respond_to(self, req: &actix_web::HttpRequest) -> actix_web::HttpResponse<Self::Body> {
-        // 对于WithContentType，我们优先使用用户指定的内容类型
-        // 但在序列化失败时，我们可能需要回退到文本格式
-        match serde_json::to_string(&self.inner) {
-            Ok(json) => actix_web::HttpResponse::Ok()
-                .content_type(&self.content_type)
-                .body(actix_web::body::BoxBody::new(json)),
-            Err(e) => {
-                // 序列化失败，使用文本格式返回错误信息
-                let error_msg = format!("Error serializing response: {}", e);
-                actix_web::HttpResponse::InternalServerError()
-                    .content_type("text/plain")
-                    .body(error_msg)
-            }
-        }
-    }
-}
-
-/// 辅助函数: 安全地从错误中提取消息
-pub fn extract_error_message<E: std::fmt::Display + std::fmt::Debug>(err: &E, field_name: Option<&str>) -> String {
-    if let Some(field) = field_name {
-        // 尝试使用反射获取字段值（实际项目中需要根据具体错误类型实现）
-        // 这里提供一个回退机制
-        match std::panic::catch_unwind(|| {
-            // 在实际项目中，这里应该使用字段访问逻辑
-            format!("{}", err)
-        }) {
-            Ok(msg) => msg,
-            Err(_) => err.to_string(),
-        }
-    } else {
-        err.to_string()
-    }
-}
-
-
-/// 内容类型协商函数 - 简化为只返回JSON格式
-pub fn negotiate_content_type(_req: &actix_web::HttpRequest) -> &'static str {
-    // 默认返回JSON
-    "application/json"
-}
-
+use quote::quote;
+use syn::{parse_macro_input, DeriveInput, ItemFn, GenericParam, Ident};
 
 /// 为结构体自动实现 actix_web::Responder 特性
 /// 
@@ -630,27 +113,13 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
                             .content_type("application/json")
                             .body(actix_web::body::BoxBody::new(json))
                     },
-                    Err(e) => {
-                        // 更健壮的错误处理
-                        let error_response = ApiError::internal_error(
-                            &format!("响应序列化失败: {}", e)
-                        );
-                        
-                        match serde_json::to_string(&error_response) {
-                            Ok(error_json) => {
-                                actix_web::HttpResponse::InternalServerError()
-                                    .content_type("application/json")
-                                    .body(actix_web::body::BoxBody::new(error_json))
-                            },
-                            Err(_) => {
-                                // 最终的回退响应
-                                actix_web::HttpResponse::InternalServerError()
-                                    .content_type("application/json")
-                                    .body(actix_web::body::BoxBody::new(
-                                        r#"{"success":false,"message":"内部序列化错误","code":500,"details":null}"#
-                                    ))
-                            }
-                        }
+                    Err(_e) => {
+                        // 序列化失败时的回退响应
+                        actix_web::HttpResponse::InternalServerError()
+                            .content_type("application/json")
+                            .body(actix_web::body::BoxBody::new(
+                                r#"{"success":false,"message":"响应序列化失败","code":500}"#
+                            ))
                     }
                 }
             }
@@ -658,7 +127,7 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
     };
     
     // 生成构造函数实现和链式响应构建方法（无论是否有泛型参数）
-    let constructor_impl = if let Some(type_param) = first_param_ident {
+    let constructor_impl = if let Some(_type_param) = first_param_ident {
         quote! {
             impl #generics #struct_name #generics {
                 /// 创建成功响应
@@ -754,27 +223,27 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
                 }
                 
                 /// 添加自定义HTTP头
-                pub fn with_header(self, name: &str, value: &str) -> WithHeader<Self>
+                pub fn with_header(self, name: &str, value: &str) -> response_macro_core::WithHeader<Self>
                 where
                     Self: Sized,
                 {
-                    WithHeader::new(self, name, value)
+                    response_macro_core::WithHeader::new(self, name, value)
                 }
                 
                 /// 覆盖默认状态码
-                pub fn with_status(self, status_code: u16) -> WithStatus<Self>
+                pub fn with_status(self, status_code: u16) -> response_macro_core::WithStatus<Self>
                 where
                     Self: Sized,
                 {
-                    WithStatus::new(self, status_code)
+                    response_macro_core::WithStatus::new(self, status_code)
                 }
                 
                 /// 自定义内容类型
-                pub fn with_content_type(self, content_type: &str) -> WithContentType<Self>
+                pub fn with_content_type(self, content_type: &str) -> response_macro_core::WithContentType<Self>
                 where
                     Self: Sized,
                 {
-                    WithContentType::new(self, content_type)
+                    response_macro_core::WithContentType::new(self, content_type)
                 }
                 
                 /// 检查响应是否成功
@@ -847,16 +316,16 @@ pub fn derive_response(input: TokenStream) -> TokenStream {
                 }
                 
                 // 链式响应构建方法
-                pub fn with_header(self, name: &str, value: &str) -> WithHeader<Self> {
-                    WithHeader::new(self, name, value)
+                pub fn with_header(self, name: &str, value: &str) -> response_macro_core::WithHeader<Self> {
+                    response_macro_core::WithHeader::new(self, name, value)
                 }
                 
-                pub fn with_status(self, status_code: u16) -> WithStatus<Self> {
-                    WithStatus::new(self, status_code)
+                pub fn with_status(self, status_code: u16) -> response_macro_core::WithStatus<Self> {
+                    response_macro_core::WithStatus::new(self, status_code)
                 }
                 
-                pub fn with_content_type(self, content_type: &str) -> WithContentType<Self> {
-                    WithContentType::new(self, content_type)
+                pub fn with_content_type(self, content_type: &str) -> response_macro_core::WithContentType<Self> {
+                    response_macro_core::WithContentType::new(self, content_type)
                 }
             }
         }
@@ -1051,7 +520,7 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
     
     // 生成成功转换代码
     let success_transform_code = if let Some(transform_fn) = transform_success {
-        let transform_ident = Ident::new(&transform_fn, Span::call_site());
+        let transform_ident = Ident::new(&transform_fn, proc_macro2::Span::call_site());
         quote! { #transform_ident(data) }
     } else {
         quote! { data }
@@ -1059,7 +528,7 @@ pub fn response(args: TokenStream, input: TokenStream) -> TokenStream {
     
     // 生成错误转换代码
     let error_transform_code = if let Some(transform_fn) = transform_error {
-        let transform_ident = Ident::new(&transform_fn, Span::call_site());
+        let transform_ident = Ident::new(&transform_fn, proc_macro2::Span::call_site());
         quote! { #transform_ident(error_message) }
     } else {
         quote! { error_message }
@@ -1253,5 +722,3 @@ pub fn error(input: TokenStream) -> TokenStream {
     }
 }
 
-// 重新导出core库的类型供用户使用
-pub use response_macro_core::{ApiError, ResponseExt, WithHeader, WithStatus, WithContentType};

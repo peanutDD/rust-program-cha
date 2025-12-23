@@ -156,10 +156,13 @@ pub fn complex_default_generics_demo() {
 
     impl<T, E, const N: usize> Container<T, E, N>
     where
-        T: Debug, // 移除不必要的Clone约束
+        T: Debug,
         E: Display,
     {
-        fn new(error_handler: fn(E)) -> Self {
+        fn new(error_handler: fn(E)) -> Self
+        where
+            T: Clone,
+        {
             Container {
                 items: vec![None; N],
                 error_handler,
@@ -245,4 +248,13 @@ pub fn complex_default_generics_demo() {
     }
 
     println!("Custom container length: {}", custom_container.len());
+}
+
+/// 默认泛型类型参数主入口函数
+pub fn default_generic_params_analysis() {
+    println!("\n=== 2. 默认泛型类型参数分析 ===");
+    
+    basic_default_generics_demo();
+    operator_overloading_defaults_demo();
+    complex_default_generics_demo();
 }
