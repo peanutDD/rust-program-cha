@@ -183,9 +183,32 @@ impl ApiError {
 
 impl fmt::Display for ApiError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "ApiError: {}, code: {}, trace_id: {}", 
-               self.message, self.code, 
-               self.trace_id.as_deref().unwrap_or("unknown"))
+        if self.success {
+            // 对于成功响应，使用 SuccessResponse 作为前缀，便于与错误区分
+            write!(
+                f,
+                "SuccessResponse: {}, code: {}, trace_id: {}",
+                self.message,
+                self.code,
+                self.trace_id.as_deref().unwrap_or("unknown")
+            )
+        } else {
+            // 对于失败响应，保持 ApiError 前缀，强调错误语义
+            write!(
+                f,
+                "ApiError: {}, code: {}, trace_id: {}",
+                self.message,
+                self.code,
+                self.trace_id.as_deref().unwrap_or("unknown")
+            )?;
+
+            // 如果存在details字段，在Display中显式展示，便于调试与测试断言
+            if let Some(details) = &self.details {
+                write!(f, ", Details: {}", details)?;
+            }
+
+            Ok(())
+        }
     }
 }
 

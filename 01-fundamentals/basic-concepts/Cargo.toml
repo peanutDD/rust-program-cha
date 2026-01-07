@@ -19,14 +19,4 @@ path = "src/refactored_main.rs"
 name = "enterprise_main"
 path = "src/enterprise_main.rs"
 
-[[bin]]
-name = "rust_concepts_examples"
-path = "rust_concepts_examples.rs"
-
-[[bin]]
-name = "rust_exercises"
-path = "rust_exercises.rs"
-
-
-
 [dependencies]
