@@ -1,5 +1,7 @@
-// main.rs
-// Rust 引用与借用学习项目主入口
+//! # Rust 引用与借用学习项目主入口
+//!
+//! 本模块整合了引用与借用的分析和练习，提供完整的学习路径。
+//! 基于 https://course.rs/basic/ownership/borrowing.html
 
 mod borrowing_analysis;
 mod exercises;

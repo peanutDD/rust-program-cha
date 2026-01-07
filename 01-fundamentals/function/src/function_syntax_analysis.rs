@@ -227,7 +227,8 @@ fn demonstrate_special_parameters() {
   }
 
   fn handle_struct(person: &Person) {
-    println!("人员信息: {:?}", person);
+    // 明确访问字段以演示结构体参数的使用
+    println!("人员信息: 姓名={}, 年龄={}", person.name, person.age);
   }
 
   // 泛型参数

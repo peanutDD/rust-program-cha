@@ -15,7 +15,6 @@
 //! 9. 常见错误与最佳实践
 //! 10. 性能优化技巧
 
-use std::collections::HashMap;
 use std::fmt::Debug;
 
 /// 运行所有函数演示
@@ -274,7 +273,11 @@ struct Person {
 
 // 结构体参数
 fn display_person_info(person: &Person) {
-  println!("人员信息: {:?}", person);
+  // 明确访问字段以演示结构体参数的使用
+  println!(
+    "人员信息: 姓名={}, 年龄={}, 邮箱={}",
+    person.name, person.age, person.email
+  );
 }
 
 /// 4. 函数返回值详解
@@ -1090,7 +1093,11 @@ fn code_style_demo() {
   const MAX_RETRY_COUNT: u32 = 3;
 
   let connection_result = establish_database_connection(MAX_RETRY_COUNT);
-  println!("数据库连接结果: {:?}", connection_result);
+  // 明确访问枚举字段以演示 Result 类型的使用
+  match &connection_result {
+    ConnectionResult::Success(msg) => println!("数据库连接成功: {}", msg),
+    ConnectionResult::Failed(msg) => println!("数据库连接失败: {}", msg),
+  }
 }
 
 #[derive(Debug)]

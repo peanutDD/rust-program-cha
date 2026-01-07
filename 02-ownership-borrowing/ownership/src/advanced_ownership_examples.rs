@@ -411,7 +411,8 @@ fn demonstrate_zero_copy_strings() {
 
   use std::borrow::Cow;
 
-  fn process_text(input: &str) -> Cow<str> {
+  // 使用生命周期省略规则，编译器会自动推断
+  fn process_text(input: &str) -> Cow<'_, str> {
     if input.contains("bad") {
       // 需要修改，创建新字符串
       Cow::Owned(input.replace("bad", "good"))

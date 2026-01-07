@@ -1,9 +1,14 @@
-// 引入我们的 Rust 函数详解指南模块
+//! # Rust 函数模块主入口
+//!
+//! 本模块整合了函数语法分析和函数综合指南，提供完整的函数学习路径。
+//! 基于 https://course.rs/basic/base-type/function.html
+
 mod function_syntax_analysis;
 mod rust_function_comprehensive_guide;
 
-use function_syntax_analysis::*;
-use rust_function_comprehensive_guide::*;
+use function_syntax_analysis::comprehensive_function_syntax_analysis;
+use function_syntax_analysis::syntax_summary;
+use rust_function_comprehensive_guide::run_all_function_demos;
 
 fn main() {
   // 运行函数语法深度解析

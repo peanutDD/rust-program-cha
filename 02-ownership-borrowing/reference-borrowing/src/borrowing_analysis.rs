@@ -370,10 +370,14 @@ fn struct_with_references() {
 
 /// 方法中的生命周期
 impl<'a> ImportantExcerpt<'a> {
+  /// 获取重要性级别（演示方法中的生命周期）
+  #[allow(dead_code)] // 演示代码，实际项目中会使用
   fn level(&self) -> i32 {
     3
   }
 
+  /// 宣布并返回部分内容（演示生命周期参数）
+  #[allow(dead_code)] // 演示代码，实际项目中会使用
   fn announce_and_return_part(&self, announcement: &str) -> &str {
     println!("Attention please: {}", announcement);
     self.part

@@ -486,7 +486,7 @@ fn performance_considerations() {
   }
 
   let int_duration = start.elapsed();
-  println!("\n整数运算耗时: {:?}", int_duration);
+  println!("\n整数运算耗时: {:?}, 结果: {}", int_duration, sum_int);
 
   let start = std::time::Instant::now();
 
@@ -497,7 +497,7 @@ fn performance_considerations() {
   }
 
   let float_duration = start.elapsed();
-  println!("浮点数运算耗时: {:?}", float_duration);
+  println!("浮点数运算耗时: {:?}, 结果: {}", float_duration, sum_float);
 
   // 避免不必要的类型转换
   println!("\n性能提示:");
@@ -609,7 +609,7 @@ const PI: f64 = 3.141592653589793;
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  // 测试模块：使用标准库类型进行测试，无需导入父模块内容
 
   #[test]
   fn test_overflow_handling() {

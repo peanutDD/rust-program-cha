@@ -41,7 +41,7 @@ pub fn declaration_statements_demo() {
 
   // 基本变量声明
   let a = 8;
-  let b: Vec<f64> = Vec::new();
+  let _b: Vec<f64> = Vec::new(); // 演示类型注解
   let (c, d) = ("hello", true);
 
   println!("a = {}, c = {}, d = {}", a, c, d);
@@ -119,7 +119,7 @@ pub fn tuple_expressions_demo() {
 
   // 单元素元组（需要逗号）
   let single_element = (42,); // 单元素元组
-  let not_tuple = (42); // 这只是括号中的数字，不是元组
+  let not_tuple = 42; // 这只是数字，不是元组
 
   println!("tuple1: {:?}", tuple1);
   println!("tuple2: {:?}", tuple2);
@@ -152,9 +152,10 @@ pub fn struct_expressions_demo() {
   // 基于现有结构体创建新结构体
   let point2 = Point { x: 5.0, ..point1 };
 
-  println!("point1: {:?}", point1);
-  println!("tuple_point: {:?}", tuple_point);
-  println!("point2: {:?}", point2);
+  // 明确访问字段以演示结构体表达式的使用
+  println!("point1: x={}, y={}", point1.x, point1.y);
+  println!("tuple_point: x={}, y={}", tuple_point.0, tuple_point.1);
+  println!("point2: x={}, y={}", point2.x, point2.y);
 }
 
 /// ## 3.4 块表达式
@@ -201,9 +202,10 @@ pub fn range_expressions_demo() {
   // 各种范围表达式
   let range1 = 1..5; // 1, 2, 3, 4 (不包含 5)
   let range2 = 1..=5; // 1, 2, 3, 4, 5 (包含 5)
-  let range3 = 3..; // 从 3 开始的无限范围
-  let range4 = ..4; // 到 4 结束的范围
-  let range5 = ..; // 全范围
+  // 其他范围类型示例（用于演示语法，实际使用需要配合迭代器）
+  let _range3 = 3..; // 从 3 开始的无限范围
+  let _range4 = ..4; // 到 4 结束的范围
+  let _range5 = ..; // 全范围
 
   println!("range1 包含的元素:");
   for i in range1 {
@@ -299,16 +301,29 @@ pub fn match_expressions_demo() {
     ChangeColor(i32, i32, i32),
   }
 
-  let msg = Message::Move { x: 10, y: 20 };
+  // 演示不同的枚举变体构造
+  let msg1 = Message::Move { x: 10, y: 20 };
+  let msg2 = Message::Write("hello".to_string());
+  let msg3 = Message::ChangeColor(255, 0, 0);
+  let msg4 = Message::Quit;
 
-  let response = match msg {
+  // 处理不同的消息类型
+  let response1 = match msg1 {
     Message::Quit => "退出".to_string(),
     Message::Move { x, y } => format!("移动到 ({}, {})", x, y),
     Message::Write(text) => format!("写入: {}", text),
     Message::ChangeColor(r, g, b) => format!("改变颜色为 RGB({}, {}, {})", r, g, b),
   };
 
-  println!("消息处理: {}", response);
+  let response2 = match msg2 {
+    Message::Write(text) => format!("写入消息: {}", text),
+    _ => "其他类型".to_string(),
+  };
+
+  println!("消息1处理: {}", response1);
+  println!("消息2处理: {}", response2);
+  // msg3 和 msg4 用于演示枚举变体的存在，实际项目中会进一步处理
+  let _ = (msg3, msg4);
 }
 
 /// ## 3.8 数组表达式
@@ -439,7 +454,8 @@ pub fn statement_vs_expression_demo() {
   let value_from_statement = {
     let a = 5;
     let b = 10;
-    a + b; // 语句（有分号），返回 ()
+    let _ = a + b; // 语句（有分号），返回 ()，使用 let _ 明确忽略结果
+    // 注意：这里 a + b 的结果被丢弃，整个块返回 ()
   };
 
   println!("表达式的值: {}", value_from_expression);
@@ -529,7 +545,7 @@ pub fn common_mistakes_demo() {
   let wrong = {
     let a = 5;
     let b = 10;
-    a + b; // 有分号，这是语句，返回 ()
+    let _ = a + b; // 有分号，这是语句，返回 ()，使用 let _ 明确忽略结果
   };
 
   let correct = {

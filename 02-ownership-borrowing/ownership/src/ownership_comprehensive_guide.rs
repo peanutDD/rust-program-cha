@@ -2241,7 +2241,8 @@ fn performance_best_practices() {
   // 使用 Cow (Clone on Write) 优化
   use std::borrow::Cow;
 
-  fn process_text(input: &str) -> Cow<str> {
+  // 使用生命周期省略规则，编译器会自动推断
+  fn process_text(input: &str) -> Cow<'_, str> {
     if input.contains("bad_word") {
       Cow::Owned(input.replace("bad_word", "***"))
     } else {

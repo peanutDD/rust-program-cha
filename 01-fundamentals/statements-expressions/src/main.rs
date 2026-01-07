@@ -1,7 +1,11 @@
-// 引入我们的语句与表达式指南模块
+//! # Rust 语句与表达式模块主入口
+//!
+//! 本模块详细讲解 Rust 中语句(Statement)与表达式(Expression)的概念、区别和使用方法。
+//! 基于 https://course.rs/basic/base-type/statement-expression.html
+
 mod statements_expressions_guide;
 
-use statements_expressions_guide::*;
+use statements_expressions_guide::run_all_demos;
 
 fn main() {
   // 运行完整的语句与表达式演示

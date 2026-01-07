@@ -1,6 +1,7 @@
-// exercises.rs
-// Rust 引用与借用练习题
-// 这些练习帮助你巩固引用与借用的概念
+//! # Rust 引用与借用练习题
+//!
+//! 这些练习帮助你巩固引用与借用的概念。
+//! 基于 https://course.rs/basic/ownership/borrowing.html
 
 /*
 练习说明：
@@ -16,12 +17,14 @@
 
 /// 练习1：修复这个函数，使其能够计算字符串长度而不获取所有权
 /// 提示：使用引用
+#[allow(dead_code)] // 练习题，供学习者实现
 fn exercise1_calculate_length(_s: String) -> usize {
   // TODO: 修改函数签名和实现
   0 // 占位符
 }
 
-/// 练习1的正确实现
+/// 练习1的正确实现（在测试中使用）
+#[cfg(test)]
 fn exercise1_calculate_length_solution(s: &String) -> usize {
   s.len()
 }
@@ -32,12 +35,14 @@ fn exercise1_calculate_length_solution(s: &String) -> usize {
 
 /// 练习2：修复这个函数，使其能够修改传入的字符串
 /// 提示：使用可变引用
+#[allow(dead_code)] // 练习题，供学习者实现
 fn exercise2_append_world(_s: &String) {
   // TODO: 修改函数签名，使其能够修改字符串
   // s.push_str(", world!");
 }
 
-/// 练习2的正确实现
+/// 练习2的正确实现（在测试中使用）
+#[cfg(test)]
 fn exercise2_append_world_solution(s: &mut String) {
   s.push_str(", world!");
 }
@@ -48,6 +53,7 @@ fn exercise2_append_world_solution(s: &mut String) {
 
 /// 练习3：修复这个函数中的借用错误
 /// 提示：注意可变引用和不可变引用的规则
+#[allow(dead_code)] // 练习题，供学习者实现
 fn exercise3_borrowing_rules() {
   let _s = String::from("hello");
 
@@ -61,7 +67,8 @@ fn exercise3_borrowing_rules() {
   */
 }
 
-/// 练习3的正确实现
+/// 练习3的正确实现（在测试中使用）
+#[cfg(test)]
 fn exercise3_borrowing_rules_solution() {
   let mut s = String::from("hello");
 
@@ -80,13 +87,15 @@ fn exercise3_borrowing_rules_solution() {
 
 /// 练习4：实现一个函数，返回字符串的最后一个单词
 /// 提示：使用字符串切片和迭代器
+#[allow(dead_code)] // 练习题，供学习者实现
 fn exercise4_last_word(_s: &String) -> &str {
   // TODO: 实现这个函数
   // 提示：可以使用 split_whitespace() 和 last()
   ""
 }
 
-/// 练习4的正确实现
+/// 练习4的正确实现（在测试中使用）
+#[cfg(test)]
 fn exercise4_last_word_solution(s: &str) -> &str {
   s.split_whitespace().last().unwrap_or("")
 }
@@ -97,12 +106,14 @@ fn exercise4_last_word_solution(s: &str) -> &str {
 
 /// 练习5：实现一个函数，返回数组中最大值的索引
 /// 提示：使用切片和迭代器
+#[allow(dead_code)] // 练习题，供学习者实现
 fn exercise5_max_index(_arr: &[i32]) -> Option<usize> {
   // TODO: 实现这个函数
   None
 }
 
-/// 练习5的正确实现
+/// 练习5的正确实现（在测试中使用）
+#[cfg(test)]
 fn exercise5_max_index_solution(arr: &[i32]) -> Option<usize> {
   if arr.is_empty() {
     return None;
@@ -123,12 +134,14 @@ fn exercise5_max_index_solution(arr: &[i32]) -> Option<usize> {
 
 /// 练习6：为这个函数添加正确的生命周期标注
 /// 提示：返回的引用的生命周期与输入参数相关
+#[allow(dead_code)] // 练习题，供学习者实现
 fn exercise6_longer_string<'a>(_x: &'a str, _y: &'a str) -> &'a str {
   // TODO: 添加生命周期标注
   ""
 }
 
-/// 练习6的正确实现
+/// 练习6的正确实现（在测试中使用）
+#[cfg(test)]
 fn exercise6_longer_string_solution<'a>(x: &'a str, y: &'a str) -> &'a str {
   if x.len() > y.len() { x } else { y }
 }
@@ -146,6 +159,7 @@ fn exercise6_longer_string_solution<'a>(x: &'a str, y: &'a str) -> &'a str {
 // TODO: 添加生命周期参数
 
 /// 练习7的正确实现
+#[allow(dead_code)] // 演示代码，在测试中使用
 struct Exercise7BookSolution<'a> {
   title: &'a str,
   author: &'a str,
@@ -157,12 +171,14 @@ struct Exercise7BookSolution<'a> {
 
 /// 练习8：实现一个函数，交换两个可变引用指向的值
 /// 提示：使用 std::mem::swap
+#[allow(dead_code)] // 练习题，供学习者实现
 fn exercise8_swap_values(_x: &i32, _y: &i32) {
   // TODO: 修改函数签名和实现
   // std::mem::swap(x, y);
 }
 
-/// 练习8的正确实现
+/// 练习8的正确实现（在测试中使用）
+#[cfg(test)]
 fn exercise8_swap_values_solution(x: &mut i32, y: &mut i32) {
   std::mem::swap(x, y);
 }
@@ -173,12 +189,14 @@ fn exercise8_swap_values_solution(x: &mut i32, y: &mut i32) {
 
 /// 练习9：实现一个函数，移除字符串中的所有空格
 /// 要求：不能获取字符串的所有权，返回新的 String
+#[allow(dead_code)] // 练习题，供学习者实现
 fn exercise9_remove_spaces(_s: &String) -> String {
   // TODO: 实现这个函数
   String::new()
 }
 
-/// 练习9的正确实现
+/// 练习9的正确实现（在测试中使用）
+#[cfg(test)]
 fn exercise9_remove_spaces_solution(s: &str) -> String {
   s.chars().filter(|c| !c.is_whitespace()).collect()
 }
@@ -189,12 +207,14 @@ fn exercise9_remove_spaces_solution(s: &str) -> String {
 
 /// 练习10：实现一个函数，将数组分成两半
 /// 返回两个切片的元组
+#[allow(dead_code)] // 练习题，供学习者实现
 fn exercise10_split_array(_arr: &[i32]) -> (&[i32], &[i32]) {
   // TODO: 实现这个函数
   (&[], &[])
 }
 
-/// 练习10的正确实现
+/// 练习10的正确实现（在测试中使用）
+#[cfg(test)]
 fn exercise10_split_array_solution(arr: &[i32]) -> (&[i32], &[i32]) {
   let mid = arr.len() / 2;
   arr.split_at(mid)
@@ -316,11 +336,13 @@ mod exercise_tests {
 
 /// 挑战练习1：实现一个安全的字符串分割函数
 /// 要求：返回一个包含所有单词的 Vec，但每个单词都是原字符串的切片
+#[allow(dead_code)] // 挑战题，供学习者实现
 fn challenge1_split_words(s: &str) -> Vec<&str> {
   s.split_whitespace().collect()
 }
 
 /// 挑战练习2：实现一个函数，找到两个字符串的公共前缀
+#[allow(dead_code)] // 挑战题，供学习者实现
 fn challenge2_common_prefix<'a>(s1: &'a str, s2: &'a str) -> &'a str {
   let bytes1 = s1.as_bytes();
   let bytes2 = s2.as_bytes();
@@ -334,6 +356,7 @@ fn challenge2_common_prefix<'a>(s1: &'a str, s2: &'a str) -> &'a str {
 }
 
 /// 挑战练习3：实现一个函数，安全地获取数组的第n个元素
+#[allow(dead_code)] // 挑战题，供学习者实现
 fn challenge3_safe_get<T>(arr: &[T], index: usize) -> Option<&T> {
   arr.get(index)
 }

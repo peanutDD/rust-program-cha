@@ -920,7 +920,7 @@ const UNICODE_MAX: u32 = 0x10FFFF;
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  // 测试模块：使用标准库类型进行测试，无需导入父模块内容
 
   #[test]
   fn test_char_size() {
