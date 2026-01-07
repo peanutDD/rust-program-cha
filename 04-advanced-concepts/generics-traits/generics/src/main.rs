@@ -1,22 +1,21 @@
-/*
- * Rust 泛型 (Generics) 全面深入分析
- * 基于 https://course.rs/basic/trait/generic.html
- *
- * 本文档全面分析 Rust 中的泛型概念，包括：
- * 1. 泛型的基本概念和优势
- * 2. 泛型函数
- * 3. 泛型结构体
- * 4. 泛型枚举
- * 5. 泛型方法
- * 6. 泛型特征约束
- * 7. 多重约束和 where 子句
- * 8. 关联类型
- * 9. 生命周期参数
- * 10. const 泛型
- * 11. 泛型的性能和单态化
- * 12. 高级泛型技巧
- * 13. 实际应用场景
- */
+//! # Rust 泛型 (Generics) 全面深入分析
+//!
+//! 基于 https://course.rs/basic/trait/generic.html
+//!
+//! 本文档全面分析 Rust 中的泛型概念，包括：
+//! 1. 泛型的基本概念和优势
+//! 2. 泛型函数
+//! 3. 泛型结构体
+//! 4. 泛型枚举
+//! 5. 泛型方法
+//! 6. 泛型特征约束
+//! 7. 多重约束和 where 子句
+//! 8. 关联类型
+//! 9. 生命周期参数
+//! 10. const 泛型
+//! 11. 泛型的性能和单态化
+//! 12. 高级泛型技巧
+//! 13. 实际应用场景
 
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
@@ -1154,7 +1153,7 @@ fn const_generic_demo() {
             N
         }
 
-        fn iter(&self) -> std::slice::Iter<T> {
+        fn iter(&self) -> std::slice::Iter<'_, T> {
             self.data.iter()
         }
     }

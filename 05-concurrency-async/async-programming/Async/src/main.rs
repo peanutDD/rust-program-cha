@@ -326,7 +326,7 @@ impl<T> AsyncMutex<T> {
         }
     }
     
-    async fn lock(&self) -> Result<std::sync::MutexGuard<T>, &'static str> {
+    async fn lock(&self) -> Result<std::sync::MutexGuard<'_, T>, &'static str> {
         // 在实际的异步 Mutex 中，这里会是非阻塞的
         match self.data.try_lock() {
             Ok(guard) => Ok(guard),

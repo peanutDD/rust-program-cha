@@ -1,3 +1,7 @@
+// 示例代码库，允许未使用的导入和代码（用于教学演示）
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
 //! # Move, Copy, and Clone 深度解析
 //!
 //! 本库提供了对Rust中三个核心概念的全面分析：

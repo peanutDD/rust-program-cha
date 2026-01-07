@@ -13,6 +13,7 @@ use std::fmt;
 /// 基础枚举示例：IP 地址类型
 /// 枚举值只可能是其中一个成员
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)] // 示例代码，供学习者参考
 pub enum IpAddrKind {
     V4,
     V6,
@@ -28,6 +29,7 @@ pub enum IpAddr {
 /// 复杂枚举：不同成员存储不同类型和数量的数据
 #[derive(Debug, Clone)]
 pub enum Message {
+    #[allow(dead_code)] // 示例代码，供学习者参考
     Quit,                       // 无数据
     Move { x: i32, y: i32 },    // 命名字段
     Write(String),              // 单个字符串
@@ -188,17 +190,23 @@ fn demonstrate_result_methods() {
 /// 硬币枚举示例
 #[derive(Debug)]
 pub enum Coin {
+    #[allow(dead_code)] // 示例代码，供学习者参考
     Penny,
+    #[allow(dead_code)] // 示例代码，供学习者参考
     Nickel,
+    #[allow(dead_code)] // 示例代码，供学习者参考
     Dime,
     Quarter(UsState),
 }
 
 #[derive(Debug)]
 pub enum UsState {
+    #[allow(dead_code)] // 示例代码，供学习者参考
     Alabama,
     Alaska,
+    #[allow(dead_code)] // 示例代码，供学习者参考
     California,
+    #[allow(dead_code)] // 示例代码，供学习者参考
     Texas,
 }
 
@@ -339,6 +347,7 @@ impl RequestStatus {
 pub enum Permission {
     Read,
     Write,
+    #[allow(dead_code)] // 示例代码，供学习者参考
     Execute,
     Admin,
 }
@@ -346,8 +355,10 @@ pub enum Permission {
 /// 用户角色枚举
 #[derive(Debug, Clone)]
 pub enum UserRole {
+    #[allow(dead_code)] // 示例代码，供学习者参考
     Guest,
     User(Vec<Permission>),
+    #[allow(dead_code)] // 示例代码，供学习者参考
     Moderator(Vec<Permission>),
     Admin,
 }
@@ -381,6 +392,7 @@ impl UserRole {
 
 /// 泛型枚举：表示操作结果
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // 示例代码，供学习者参考
 pub enum OperationResult<T, E> {
     Success(T),
     Failure(E),
@@ -392,14 +404,17 @@ impl<T, E> OperationResult<T, E> {
         matches!(self, OperationResult::Success(_))
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn is_failure(&self) -> bool {
         matches!(self, OperationResult::Failure(_))
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn is_pending(&self) -> bool {
         matches!(self, OperationResult::Pending)
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn map<U, F>(self, f: F) -> OperationResult<U, E>
     where
         F: FnOnce(T) -> U,

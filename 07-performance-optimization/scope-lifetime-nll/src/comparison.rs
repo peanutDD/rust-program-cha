@@ -11,8 +11,11 @@
 //! | 生命周期 | 引用有效性的时间范围 | 编译时 | 防止悬垂指针和内存安全 |
 //! | NLL | 基于实际使用的生命周期分析 | 编译时 | 更精确的借用检查 |
 
+#[allow(unused_imports)] // 示例代码中可能使用
 use std::collections::HashMap;
+#[allow(unused_imports)] // 示例代码中可能使用
 use std::rc::Rc;
+#[allow(unused_imports)] // 示例代码中可能使用
 use std::cell::RefCell;
 
 /// 运行所有对比分析示例

@@ -1,6 +1,9 @@
-// Rust变量绑定与解构示例代码集合 - 优化版本
-// 本文件展示了更深入的Rust概念和最佳实践
-// 包含性能优化、错误处理、生命周期管理等高级特性
+//! Rust变量绑定与解构示例代码集合 - 优化版本
+//!
+//! 本文件展示了更深入的Rust概念和最佳实践
+//! 包含性能优化、错误处理、生命周期管理等高级特性
+//!
+//! 运行方式: cargo run --example optimized_version
 
 use std::collections::HashMap;
 use std::error::Error;

@@ -194,7 +194,7 @@ pub mod compilation_errors {
             data: &'a str,
         }
 
-        fn use_borrowed_struct(s: &str) -> BorrowedStruct {
+        fn use_borrowed_struct<'a>(s: &'a str) -> BorrowedStruct<'a> {
             BorrowedStruct { data: s }
         }
 
@@ -687,7 +687,7 @@ pub mod best_practices {
         // 实践3：合理使用Cow（Clone on Write）
         use std::borrow::Cow;
 
-        fn normalize_text(text: &str) -> Cow<str> {
+        fn normalize_text<'a>(text: &'a str) -> Cow<'a, str> {
             if text.chars().all(|c| c.is_lowercase()) {
                 Cow::Borrowed(text) // 不需要修改，直接借用
             } else {

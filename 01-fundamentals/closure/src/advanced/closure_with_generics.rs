@@ -68,6 +68,7 @@ fn demo_multiple_trait_bounds() {
     println!("\n--- 3. 多重 Trait 约束 ---");
 
     // 闭包需要同时满足多个 trait
+    #[allow(dead_code)] // 示例代码，演示泛型约束
     fn process<F, T>(f: F, value: T) -> T
     where
         F: Fn(T) -> T + Clone,

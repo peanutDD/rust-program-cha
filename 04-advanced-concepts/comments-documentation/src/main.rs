@@ -1,3 +1,7 @@
+// 示例代码库，允许未使用的导入和代码（用于教学演示）
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
 //! # Rust 注释和文档系统全面分析
 //!
 //! 本项目基于 https://course.rs/basic/comment.html 内容，

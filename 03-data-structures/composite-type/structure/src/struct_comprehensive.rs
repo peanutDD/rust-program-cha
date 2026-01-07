@@ -256,11 +256,13 @@ impl<T> Point<T> {
 
 impl<T: Copy> Point<T> {
     /// 获取 x 坐标（需要 Copy trait）
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn x(&self) -> T {
         self.x
     }
 
     /// 获取 y 坐标（需要 Copy trait）
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn y(&self) -> T {
         self.y
     }
@@ -364,6 +366,7 @@ pub fn ownership_demo() {
     };
 
     println!("拥有所有权的数据: {:?}", owned);
+    println!("数据名称: {}, 数据长度: {}", owned.name, owned.data.len());
 
     // 借用数据的结构体
     let name = "借用的数据";
@@ -375,6 +378,8 @@ pub fn ownership_demo() {
     };
 
     println!("借用的数据: {:?}", borrowed);
+    println!("数据名称: {}, 数据长度: {}", borrowed.name, borrowed.data.len());
+    println!("数据名称: {}, 数据长度: {}", borrowed.name, borrowed.data.len());
 
     // 混合所有权
     let mixed = MixedOwnership {
@@ -385,6 +390,13 @@ pub fn ownership_demo() {
     };
 
     println!("混合所有权数据: {:?}", mixed);
+    println!(
+        "混合数据: 拥有名称={}, 借用名称={}, 拥有数据长度={}, 借用数据长度={}",
+        mixed.owned_name,
+        mixed.borrowed_name,
+        mixed.owned_data.len(),
+        mixed.borrowed_data.len()
+    );
 
     // 演示移动语义
     let owned2 = owned; // owned 被移动到 owned2

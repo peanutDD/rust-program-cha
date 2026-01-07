@@ -8,6 +8,8 @@
 //! - 性能优化和内存管理
 //! - 函数式编程范式
 //! - 并发安全设计
+//!
+//! 运行方式: cargo run --example refactored_version
 
 use std::collections::HashMap;
 use std::error::Error;

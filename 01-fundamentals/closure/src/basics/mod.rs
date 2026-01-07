@@ -5,10 +5,12 @@
 pub mod syntax;
 pub mod capture;
 pub mod move_keyword;
+pub mod types;
 
 pub use syntax::*;
 pub use capture::*;
 pub use move_keyword::*;
+pub use types::*;
 
 /// 运行所有基础示例
 pub fn run_all_basics() {
@@ -22,5 +24,7 @@ pub fn run_all_basics() {
     
     move_keyword::demo_move_keyword();
     move_keyword::demo_move_with_threads();
+    
+    types::demo_type_system();
 }
 

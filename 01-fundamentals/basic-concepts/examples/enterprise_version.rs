@@ -2,6 +2,8 @@
 //!
 //! 这个文件展示了如何将学习代码重构为生产级别的Rust应用，
 //! 包含了现代软件工程的最佳实践。
+//!
+//! 运行方式: cargo run --example enterprise_version
 
 use std::collections::HashMap;
 use std::fmt;

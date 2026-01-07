@@ -8,6 +8,11 @@
 //! 2. use 语法形式
 //! 3. use 引入模式
 //! 4. glob 通配符
+
+// 示例代码模块，允许未定义的 cfg 条件、未使用的导入和未使用的代码（用于演示 use 语句）
+#![allow(unexpected_cfgs)]
+#![allow(unused_imports)]
+#![allow(dead_code)]
 //! 5. 重命名和别名
 //! 6. 嵌套引入
 //! 7. 预导入模式
@@ -1264,6 +1269,8 @@ fn demonstrate_conditional_imports() {
     #[cfg(windows)]
     use platform_specific::windows::get_system_info;
 
+    // 示例代码：演示条件引入，feature 未在 Cargo.toml 中定义
+    #[allow(unexpected_cfgs)]
     #[cfg(feature = "advanced")]
     use platform_specific::advanced::advanced_feature;
 
@@ -1278,7 +1285,8 @@ fn demonstrate_conditional_imports() {
         println!("系统信息: {}", get_system_info());
     }
 
-    // 功能特性引入
+    // 功能特性引入（示例代码）
+    #[allow(unexpected_cfgs)]
     #[cfg(feature = "advanced")]
     {
         advanced_feature();

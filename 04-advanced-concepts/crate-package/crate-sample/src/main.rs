@@ -3,6 +3,9 @@
 //! 本文档全面分析 Rust 包系统，涵盖包的基础概念、结构、类型、
 //! 依赖管理、元数据配置、构建发布、工作空间管理等所有相关知识点。
 
+// 示例代码模块，允许未定义的 cfg 条件（用于演示条件编译）
+#![allow(unexpected_cfgs)]
+
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;

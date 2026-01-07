@@ -3,4 +3,10 @@ name = "comments-documentation"
 version = "0.1.0"
 edition = "2024"
 
+# 示例代码中使用的条件编译 features（用于演示）
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(feature, values("advanced", "v1", "v2", "serde", "json", "experimental", "networking"))'
+] }
+
 [dependencies]

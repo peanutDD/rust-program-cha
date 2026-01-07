@@ -11,6 +11,10 @@
 //! 4. **生命周期子类型**: 生命周期之间的关系
 //! 5. **高阶生命周期**: 更复杂的生命周期场景
 
+// 示例代码模块，允许未使用的代码
+#![allow(dead_code)]
+
+#[allow(unused_imports)] // 示例代码中可能使用
 use std::collections::HashMap;
 use std::fmt::Display;
 

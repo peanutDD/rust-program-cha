@@ -5,6 +5,11 @@
 //!
 //! 基于 https://course.rs/basic/crate-module/module.html 的深度扩展分析
 
+// 示例代码模块，允许未定义的 cfg 条件、未使用的导入和代码（用于演示条件编译）
+#![allow(unexpected_cfgs)]
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 use std::fmt::{self, Display};
 use std::io::{self, Write};
@@ -1182,6 +1187,8 @@ fn demonstrate_conditional_compilation() {
 fn demonstrate_cfg_attributes() {
     println!("\n cfg 属性:");
 
+    // 示例代码：演示 cfg 条件编译，feature 未在 Cargo.toml 中定义
+    #[allow(unexpected_cfgs)]
     mod cfg_example {
         #[cfg(feature = "advanced")]
         pub fn advanced_feature() {
@@ -1226,6 +1233,8 @@ fn demonstrate_feature_gates() {
             }
         }
 
+        // 示例代码：演示 feature 条件编译
+        #[allow(unexpected_cfgs)]
         #[cfg(feature = "experimental")]
         pub mod experimental {
             pub fn experimental_function() {
@@ -1233,6 +1242,8 @@ fn demonstrate_feature_gates() {
             }
         }
 
+        // 示例代码：演示 feature 条件编译
+        #[allow(unexpected_cfgs)]
         #[cfg(feature = "networking")]
         pub mod networking {
             pub fn network_function() {
@@ -1240,6 +1251,7 @@ fn demonstrate_feature_gates() {
             }
         }
 
+        #[allow(unexpected_cfgs)]
         pub fn demonstrate_features() {
             basic::basic_function();
 

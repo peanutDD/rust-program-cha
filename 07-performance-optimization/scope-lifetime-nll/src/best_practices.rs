@@ -3,9 +3,13 @@
 //! 本模块提供在实际开发中使用作用域、生命周期和 NLL 的最佳实践指南。
 //! 包括设计原则、常见模式、性能优化和代码质量提升等方面的建议。
 
+#[allow(unused_imports)] // 示例代码中可能使用
 use std::collections::HashMap;
+#[allow(unused_imports)] // 示例代码中可能使用
 use std::sync::{Arc, Mutex};
+#[allow(unused_imports)] // 示例代码中可能使用
 use std::rc::Rc;
+#[allow(unused_imports)] // 示例代码中可能使用
 use std::cell::RefCell;
 
 /// 运行最佳实践分析
@@ -1129,7 +1133,7 @@ fn borrowing_vs_cloning_strategies() {
         
         use std::borrow::Cow;
         
-        fn process_text(input: &str) -> Cow<str> {
+        fn process_text<'a>(input: &'a str) -> Cow<'a, str> {
             if input.contains("special") {
                 // 需要修改时才克隆
                 Cow::Owned(input.replace("special", "SPECIAL"))

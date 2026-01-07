@@ -174,6 +174,7 @@ fn pitfall_4_trait_object_limitations() {
     {
         enum Operation {
             Add,
+            #[allow(dead_code)] // 示例代码，演示模式匹配
             Multiply,
         }
 

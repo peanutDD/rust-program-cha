@@ -451,7 +451,7 @@ fn custom_iterators() {
             self.data.push(item);
         }
         
-        fn iter(&self) -> MyVecIter<T> {
+        fn iter(&self) -> MyVecIter<'_, T> {
             MyVecIter {
                 vec: self,
                 index: 0,

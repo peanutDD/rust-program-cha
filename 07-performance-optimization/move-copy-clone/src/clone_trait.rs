@@ -879,7 +879,7 @@ fn demonstrate_clone_optimization() {
     // 写时复制 (Copy-on-Write) 策略
     use std::borrow::Cow;
     
-    fn process_string(input: &str) -> Cow<str> {
+    fn process_string<'a>(input: &'a str) -> Cow<'a, str> {
         if input.contains("特殊") {
             // 需要修改，返回拥有的字符串
             Cow::Owned(input.replace("特殊", "普通"))

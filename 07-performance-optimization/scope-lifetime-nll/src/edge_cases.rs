@@ -3,11 +3,21 @@
 //! 本模块深入分析 Rust 中作用域、生命周期和 NLL 的边界情况、特殊情况和常见陷阱。
 //! 通过具体的代码示例展示这些边界情况，帮助开发者避免常见错误。
 
+// 示例代码模块，允许未使用的代码
+#![allow(dead_code)]
+
+// 以下导入用于示例代码演示，部分可能未在当前模块直接使用
+#[allow(unused_imports)]
 use std::collections::HashMap;
+#[allow(unused_imports)]
 use std::rc::Rc;
+#[allow(unused_imports)]
 use std::cell::RefCell;
+#[allow(unused_imports)]
 use std::sync::{Arc, Mutex};
+#[allow(unused_imports)]
 use std::thread;
+#[allow(unused_imports)]
 use std::time::Duration;
 
 // 添加process_static_data函数定义

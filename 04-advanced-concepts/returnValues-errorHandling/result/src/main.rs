@@ -844,7 +844,7 @@ fn demonstrate_result_best_practices() {
     // 使用 Cow 进行零拷贝错误处理
     use std::borrow::Cow;
 
-    fn cow_validation(input: &str) -> Result<Cow<str>, Cow<str>> {
+    fn cow_validation<'a>(input: &'a str) -> Result<Cow<'a, str>, Cow<'a, str>> {
         if input.is_empty() {
             Err(Cow::Borrowed("输入为空"))
         } else if input.contains("bad") {

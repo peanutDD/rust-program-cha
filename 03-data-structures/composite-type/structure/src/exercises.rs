@@ -4,7 +4,6 @@
 //! 涵盖定义、方法、泛型、生命周期、trait 等各个方面
 
 use std::collections::HashMap;
-use std::fmt;
 
 // ============================================================================
 // 练习 1: 基础结构体定义和操作
@@ -90,14 +89,17 @@ pub struct Fahrenheit(pub f64);
 pub struct Kelvin(pub f64);
 
 impl Celsius {
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn new(temp: f64) -> Self {
         Celsius(temp)
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn to_fahrenheit(self) -> Fahrenheit {
         Fahrenheit(self.0 * 9.0 / 5.0 + 32.0)
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn to_kelvin(self) -> Kelvin {
         Kelvin(self.0 + 273.15)
     }
@@ -108,14 +110,17 @@ impl Celsius {
 }
 
 impl Fahrenheit {
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn new(temp: f64) -> Self {
         Fahrenheit(temp)
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn to_celsius(self) -> Celsius {
         Celsius((self.0 - 32.0) * 5.0 / 9.0)
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn to_kelvin(self) -> Kelvin {
         self.to_celsius().to_kelvin()
     }
@@ -126,14 +131,17 @@ impl Fahrenheit {
 }
 
 impl Kelvin {
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn new(temp: f64) -> Self {
         Kelvin(temp)
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn to_celsius(self) -> Celsius {
         Celsius(self.0 - 273.15)
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn to_fahrenheit(self) -> Fahrenheit {
         self.to_celsius().to_fahrenheit()
     }
@@ -148,16 +156,20 @@ impl Kelvin {
 pub struct RGB(pub u8, pub u8, pub u8);
 
 impl RGB {
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn new(r: u8, g: u8, b: u8) -> Self {
         RGB(r, g, b)
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn red(self) -> u8 {
         self.0
     }
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn green(self) -> u8 {
         self.1
     }
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn blue(self) -> u8 {
         self.2
     }
@@ -243,6 +255,7 @@ impl<T> Container<T> {
     }
 
     /// 移除项目
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn remove(&mut self) -> Option<T> {
         self.items.pop()
     }
@@ -253,6 +266,7 @@ impl<T> Container<T> {
     }
 
     /// 检查是否为空
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
@@ -271,6 +285,7 @@ impl<T> Container<T> {
 // 为实现了 Clone 的类型添加额外方法
 impl<T: Clone> Container<T> {
     /// 获取所有项目的副本
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn get_all(&self) -> Vec<T> {
         self.items.clone()
     }
@@ -284,6 +299,7 @@ impl<T: PartialEq> Container<T> {
     }
 
     /// 查找项目位置
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn find(&self, item: &T) -> Option<usize> {
         self.items.iter().position(|x| x == item)
     }
@@ -740,6 +756,7 @@ impl Student {
         }
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn course_count(&self) -> usize {
         self.grades.len()
     }
@@ -828,6 +845,7 @@ impl StudentManagementSystem {
         self.students.get(&student_id)
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn get_course(&self, course_code: &str) -> Option<&Course> {
         self.courses.get(course_code)
     }
@@ -869,6 +887,7 @@ impl StudentManagementSystem {
         self.students.len()
     }
 
+    #[allow(dead_code)] // 示例代码，供学习者参考
     pub fn course_count(&self) -> usize {
         self.courses.len()
     }
@@ -903,6 +922,11 @@ pub fn exercise_6_student_management() {
         system.student_count(),
         system.course_count()
     );
+
+    // 演示访问课程信息
+    if let Some(course) = system.get_course("CS101") {
+        println!("课程信息: {} - {} ({} 学分)", course.code, course.name, course.credits);
+    }
 
     // 学生选课
     system.enroll_student(1001, "CS101".to_string()).unwrap();

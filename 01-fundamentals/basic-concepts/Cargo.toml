@@ -7,16 +7,4 @@ edition = "2021"
 name = "main"
 path = "src/main.rs"
 
-[[bin]]
-name = "optimized_main"
-path = "src/optimized_main.rs"
-
-[[bin]]
-name = "refactored_main"
-path = "src/refactored_main.rs"
-
-[[bin]]
-name = "enterprise_main"
-path = "src/enterprise_main.rs"
-
 [dependencies]

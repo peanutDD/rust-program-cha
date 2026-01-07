@@ -1,7 +1,6 @@
-// Rust Trait 特征全面深入分析
-// 基于 https://course.rs/basic/trait/trait.html 的完整知识点梳理
-// 作者：AI Assistant
-// 日期：2024
+//! # Rust Trait 特征全面深入分析
+//!
+//! 基于 https://course.rs/basic/trait/trait.html 的完整知识点梳理
 
 use std::clone::Clone;
 use std::cmp::{Eq, Ord, Ordering, PartialEq, PartialOrd};
