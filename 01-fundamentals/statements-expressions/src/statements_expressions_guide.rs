@@ -499,21 +499,33 @@ pub fn practical_examples() {
     config.0, config.1, config.2
   );
 
-  // 示例2：数据处理管道
+  // 示例2：数据处理管道 - 优化版本
   let numbers = vec![1, 2, 3, 4, 5];
-  let processed = {
+  
+  // ✅ 优化：单次迭代链式处理，避免中间 Vec 分配
+  let processed_optimized: i32 = numbers
+    .iter()
+    .map(|x| x * 2)
+    .filter(|&x| x > 5)
+    .sum(); // 直接求和，无需中间 Vec
+  
+  println!("优化处理结果: {}", processed_optimized);
+  println!("原数组仍可用: {:?}", numbers);
+  
+  // 对比：多步骤处理（用于演示中间步骤，但效率较低）
+  let processed_step_by_step = {
     let doubled: Vec<i32> = numbers.iter().map(|x| x * 2).collect();
-    let filtered: Vec<i32> = doubled.into_iter().filter(|&x| x > 5).collect();
+    // 优化：使用引用迭代，避免移动 doubled
+    let filtered: Vec<i32> = doubled.iter().filter(|&&x| x > 5).copied().collect();
     let sum: i32 = filtered.iter().sum();
     sum
   };
+  println!("分步处理结果: {}", processed_step_by_step);
 
-  println!("处理结果: {}", processed);
-
-  // 示例3：错误处理
-  fn divide(a: f64, b: f64) -> Result<f64, String> {
+  // 示例3：错误处理 - 优化版本使用 &'static str
+  fn divide(a: f64, b: f64) -> Result<f64, &'static str> {
     if b == 0.0 {
-      Err("除数不能为零".to_string())
+      Err("除数不能为零")
     } else {
       Ok(a / b)
     }

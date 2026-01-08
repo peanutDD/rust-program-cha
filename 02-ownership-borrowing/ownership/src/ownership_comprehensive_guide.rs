@@ -638,8 +638,9 @@ fn borrowing_rules_demonstration() {
 fn demonstrate_function_borrowing() {
   println!("\n🔍 函数借用演示：");
 
-  // 借用参数的函数
-  fn process_data(data: &Vec<i32>) -> i32 {
+  // ✅ 优化：使用切片 &[i32] 而不是 &Vec<i32>
+  // 切片更通用，可以接受 Vec、数组、其他切片的引用
+  fn process_data(data: &[i32]) -> i32 {
     data.iter().sum()
   }
 

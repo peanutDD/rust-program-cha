@@ -415,8 +415,10 @@ fn type_inference_and_annotation() {
   let explicit_float: f32 = 3.14;
 
   // 通过使用推导类型
-  let mut vec = Vec::new(); // 此时类型未知
+  // 优化：如果知道大小，使用 with_capacity 预分配
+  let mut vec = Vec::with_capacity(10); // 预分配容量，避免多次重新分配
   vec.push(42); // 现在推导为 Vec<i32>
+  println!("Vec 容量: {}, 长度: {}", vec.capacity(), vec.len());
 
   // 类型后缀
   let suffix_int = 42u64;

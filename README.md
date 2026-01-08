@@ -147,12 +147,25 @@ Rust 的复合类型与模式匹配机制。
 
 ## 📖 文档资源
 
+### 📚 核心文档
+
+- **[学习路径指南](./LEARNING_PATH.md)** - 完整的学习路线图（⭐ 推荐先读）
+- **[项目概览](./PROJECT_OVERVIEW.md)** - 项目整体结构和特色介绍
 - **[项目结构说明](./docs/project-structure.md)** - 详细说明项目组织和目录结构
+
+### 📘 学习资源
+
 - **[Rust 学习完整指南](./docs/rust-learning-complete-guide.md)** - 系统化的 Rust 学习方法论
 - **[Rust 学习路线图](./docs/rust-learning-roadmap.md)** - 阶段性学习目标和时间规划
 - **[Rust 难点总结](./docs/rust-difficulty-summary.md)** - 重点难点概念解析和常见问题
 - **[API 学习路线图](./docs/api-learning-roadmap.md)** - Rust 生态系统 API 学习指南
 - **[Mise 配置指南](./docs/mise-setup-guide.md)** - 多工具版本管理配置
+
+### 🔄 项目状态
+
+- **[重构状态](./REFACTORING_STATUS.md)** - 项目重构进度
+- **[重构计划](./REFACTORING_PLAN.md)** - 详细的重构计划
+- **[重构总结](./REFACTORING_SUMMARY.md)** - 重构成果总结
 
 ## 🛠️ 工具和配置
 

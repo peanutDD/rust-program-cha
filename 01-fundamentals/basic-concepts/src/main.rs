@@ -1,6 +1,14 @@
-// Rust变量绑定与解构示例代码集合
-// 本文件包含了技术文档中的核心示例代码
-// 可以直接运行或作为学习参考
+//! # Rust 变量绑定与解构示例代码集合
+//!
+//! 本文件包含了技术文档中的核心示例代码，展示了 Rust 的基础概念。
+//! 所有示例都经过性能优化，使用引用避免不必要的克隆和移动。
+//!
+//! ## 性能优化要点
+//! - 使用 `&str` 而不是 `String` 用于字符串字面量
+//! - 使用引用传递避免所有权转移
+//! - 使用引用迭代保留原始数据可用性
+//! - 使用 `&'static str` 用于错误消息避免内存分配
+
 
 fn main() {
   println!("=== Rust变量绑定与解构示例 ===\n");
@@ -36,7 +44,7 @@ fn basic_variable_binding() {
 
   let x = 5; // 不可变绑定
   let mut y = 10; // 可变绑定
-  let z = String::from("hello"); // 堆分配数据的绑定
+  let z = "hello"; // 字符串字面量（&str 类型，存储在栈上）
 
   println!("x: {}, y: {}, z: {}", x, y, z);
 
@@ -51,9 +59,9 @@ fn ownership_examples() {
   println!("=== 所有权与移动语义 ===");
 
   // 移动语义示例
-  let s1 = String::from("hello");
+  let s1 = String::from("hello"); // 堆分配字符串
   let s2 = s1; // s1的所有权移动到s2
-               // println!("{}", s1);  // 这行会编译错误
+               // println!("{}", s1);  // 编译错误：s1 已被移动
   println!("s2: {}", s2);
 
   // 复制语义示例
@@ -69,14 +77,18 @@ fn borrowing_examples() {
   println!("=== 借用机制 ===");
 
   let s = String::from("hello");
-  let r1 = &s; // 不可变借用
+  let r1 = &s; // 不可变借用（借用，不移动）
   let r2 = &s; // 可以有多个不可变借用
   println!("r1: {}, r2: {}", r1, r2);
+  // s 仍然可用，因为只是借用
 
   let mut s2 = String::from("world");
-  let r3 = &mut s2; // 可变借用
-  r3.push_str("!");
-  println!("r3: {}", r3);
+  {
+    let r3 = &mut s2; // 可变借用（独占借用）
+    r3.push_str("!");
+    println!("r3: {}", r3);
+  } // r3 作用域结束，可变借用结束
+  println!("s2 现在可以访问: {}", s2);
 
   println!();
 }
@@ -174,13 +186,17 @@ fn enum_pattern_matching() {
   let messages = vec![
     Message::Quit,
     Message::Move { x: 10, y: 20 },
-    Message::Write(String::from("Hello")),
+    Message::Write("Hello".to_string()), // 使用 to_string() 而不是 String::from()
     Message::ChangeColor(255, 0, 0),
   ];
 
-  for msg in messages.iter() {
+  // 使用引用迭代，避免移动 messages
+  for msg in &messages {
     msg.process();
   }
+  
+  // messages 仍然可用
+  println!("消息数量: {}", messages.len());
 
   println!();
 }
@@ -222,7 +238,8 @@ enum HttpResponse {
   ServerError { error: String, code: u16 },
 }
 
-fn handle_response(response: HttpResponse) {
+/// 处理 HTTP 响应，使用引用避免移动
+fn handle_response(response: &HttpResponse) {
   match response {
     HttpResponse::Ok { data, status } => {
       println!("✅ Success ({}): {}", status, data);
@@ -237,7 +254,7 @@ fn handle_response(response: HttpResponse) {
 }
 
 fn practical_examples() {
-  println!("=== 実际应用示例 ===");
+  println!("=== 实际应用示例 ===");
 
   let responses = vec![
     HttpResponse::Ok {
@@ -253,7 +270,8 @@ fn practical_examples() {
     },
   ];
 
-  for response in responses {
+  // 使用引用迭代，避免移动
+  for response in &responses {
     handle_response(response);
   }
 
@@ -265,10 +283,10 @@ fn practical_examples() {
     None => println!("Index 2 is out of bounds"),
   }
 
-  // 安全的除法操作
-  fn safe_divide(a: f64, b: f64) -> Result<f64, String> {
+  // 安全的除法操作 - 使用 &str 避免不必要的 String 分配
+  fn safe_divide(a: f64, b: f64) -> Result<f64, &'static str> {
     if b == 0.0 {
-      Err("Division by zero".to_string())
+      Err("Division by zero")
     } else {
       Ok(a / b)
     }
@@ -338,14 +356,15 @@ fn process_config(config: Config) {
   }
 }
 
-// 函数式编程风格的解构应用
+// 函数式编程风格的解构应用 - 优化版本
 #[allow(dead_code)]
 fn functional_style_example() {
   let numbers = vec![1, -2, 3, -4, 5];
 
+  // 使用引用迭代，避免移动
   let processed: Vec<String> = numbers
-    .into_iter()
-    .filter_map(|n| match n {
+    .iter()
+    .filter_map(|&n| match n {
       x if x > 0 => Some(format!("positive: {}", x)),
       0 => Some("zero".to_string()),
       _ => None,
@@ -353,6 +372,8 @@ fn functional_style_example() {
     .collect();
 
   println!("Processed numbers: {:?}", processed);
+  // numbers 仍然可用
+  println!("Original numbers: {:?}", numbers);
 }
 
 // 性能优化示例 - 避免不必要的移动

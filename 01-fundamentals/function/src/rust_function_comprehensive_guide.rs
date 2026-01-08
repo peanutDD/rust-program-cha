@@ -399,10 +399,10 @@ fn find_first_even(numbers: &[i32]) -> Option<i32> {
   None
 }
 
-// 返回 Result
-fn safe_divide(a: f64, b: f64) -> Result<f64, String> {
+// 返回 Result - 使用 &'static str 避免不必要的 String 分配
+fn safe_divide(a: f64, b: f64) -> Result<f64, &'static str> {
   if b == 0.0 {
-    Err("除数不能为零".to_string())
+    Err("除数不能为零")
   } else {
     Ok(a / b)
   }
@@ -836,19 +836,19 @@ fn error_handling_demo() {
   }
 }
 
-fn safe_calculation(a_str: &str, b_str: &str) -> Result<f64, String> {
+fn safe_calculation(a_str: &str, b_str: &str) -> Result<f64, &'static str> {
   let a = parse_number(a_str)?;
   let b = parse_number(b_str)?;
   divide_safe(a, b)
 }
 
-fn parse_number(s: &str) -> Result<f64, String> {
-  s.parse::<f64>().map_err(|_| format!("无法解析数字: {}", s))
+fn parse_number(s: &str) -> Result<f64, &'static str> {
+  s.parse::<f64>().map_err(|_| "无法解析数字")
 }
 
-fn divide_safe(a: f64, b: f64) -> Result<f64, String> {
+fn divide_safe(a: f64, b: f64) -> Result<f64, &'static str> {
   if b == 0.0 {
-    Err("除数不能为零".to_string())
+    Err("除数不能为零")
   } else {
     Ok(a / b)
   }
@@ -1036,7 +1036,7 @@ struct UserData {
 /// let user = UserData { name: "Alice".to_string(), age: 25, email: "alice@example.com".to_string() };
 /// let result = validate_and_process_user(&user);
 /// ```
-fn validate_and_process_user(user: &UserData) -> Result<String, String> {
+fn validate_and_process_user(user: &UserData) -> Result<String, &'static str> {
   // 验证用户数据
   validate_user_name(&user.name)?;
   validate_user_age(user.age)?;
@@ -1048,29 +1048,32 @@ fn validate_and_process_user(user: &UserData) -> Result<String, String> {
   Ok(format!("用户 {} 处理完成", processed_name))
 }
 
-fn validate_user_name(name: &str) -> Result<(), String> {
+/// 验证用户名 - 使用 &'static str 避免不必要的 String 分配
+fn validate_user_name(name: &str) -> Result<(), &'static str> {
   if name.trim().is_empty() {
-    Err("用户名不能为空".to_string())
+    Err("用户名不能为空")
   } else if name.len() < 2 {
-    Err("用户名至少需要2个字符".to_string())
+    Err("用户名至少需要2个字符")
   } else {
     Ok(())
   }
 }
 
-fn validate_user_age(age: u32) -> Result<(), String> {
+/// 验证用户年龄 - 使用 &'static str 避免不必要的 String 分配
+fn validate_user_age(age: u32) -> Result<(), &'static str> {
   if age < 18 {
-    Err("年龄必须大于等于18岁".to_string())
+    Err("年龄必须大于等于18岁")
   } else if age > 120 {
-    Err("年龄不能超过120岁".to_string())
+    Err("年龄不能超过120岁")
   } else {
     Ok(())
   }
 }
 
-fn validate_user_email(email: &str) -> Result<(), String> {
+/// 验证用户邮箱 - 使用 &'static str 避免不必要的 String 分配
+fn validate_user_email(email: &str) -> Result<(), &'static str> {
   if !email.contains('@') {
-    Err("邮箱格式无效".to_string())
+    Err("邮箱格式无效")
   } else {
     Ok(())
   }
@@ -1102,8 +1105,8 @@ fn code_style_demo() {
 
 #[derive(Debug)]
 enum ConnectionResult {
-  Success(String),
-  Failed(String),
+  Success(&'static str),  // 使用静态字符串避免分配
+  Failed(&'static str),
 }
 
 fn establish_database_connection(max_retries: u32) -> ConnectionResult {
@@ -1112,11 +1115,11 @@ fn establish_database_connection(max_retries: u32) -> ConnectionResult {
 
     // 模拟连接尝试
     if attempt == max_retries {
-      return ConnectionResult::Success("连接成功".to_string());
+      return ConnectionResult::Success("连接成功");
     }
   }
 
-  ConnectionResult::Failed("连接失败".to_string())
+  ConnectionResult::Failed("连接失败")
 }
 
 /// 10. 性能优化技巧
@@ -1147,13 +1150,21 @@ pub fn performance_optimization_tips() {
 fn clone_optimization_demo() {
   let large_string = "这是一个很长的字符串".repeat(1000);
 
-  // 低效：不必要的克隆
+  // ❌ 低效：不必要的克隆
+  let start = std::time::Instant::now();
   let _result1 = process_string_inefficient(large_string.clone());
+  let inefficient_duration = start.elapsed();
 
-  // 高效：使用引用
+  // ✅ 高效：使用引用
+  let start = std::time::Instant::now();
   let _result2 = process_string_efficient(&large_string);
+  let efficient_duration = start.elapsed();
 
   println!("字符串处理完成（演示克隆优化）");
+  println!("  低效方式（clone）耗时: {:?}", inefficient_duration);
+  println!("  高效方式（引用）耗时: {:?}", efficient_duration);
+  println!("  性能提升: {:.1}x", 
+           inefficient_duration.as_nanos() as f64 / efficient_duration.as_nanos().max(1) as f64);
 }
 
 // 低效的实现
@@ -1181,7 +1192,20 @@ fn calculate_sum(numbers: &[i32]) -> i32 {
   numbers.iter().sum()
 }
 
+/// 计算平均值 - 优化版本，避免重复计算长度
 fn calculate_average(numbers: &[i32]) -> f64 {
+  if numbers.is_empty() {
+    0.0
+  } else {
+    // 优化：只遍历一次，同时计算和和长度
+    let (sum, count) = numbers.iter().fold((0i64, 0usize), |(s, c), &n| (s + n as i64, c + 1));
+    sum as f64 / count as f64
+  }
+}
+
+// 如果确定需要原始实现（更简单但需要两次遍历）
+#[allow(dead_code)]
+fn calculate_average_simple(numbers: &[i32]) -> f64 {
   if numbers.is_empty() {
     0.0
   } else {
@@ -1191,10 +1215,22 @@ fn calculate_average(numbers: &[i32]) -> f64 {
 
 fn inline_function_demo() {
   let numbers = vec![1, 2, 3, 4, 5];
-  let doubled: Vec<i32> = numbers.iter().map(|&x| inline_double(x)).collect();
+  
+  // 优化：预分配容量，避免多次重新分配
+  let doubled: Vec<i32> = numbers
+    .iter()
+    .map(|&x| inline_double(x))
+    .collect(); // collect 会智能预分配容量
 
   println!("原数组: {:?}", numbers);
   println!("翻倍后: {:?}", doubled);
+  
+  // 如果知道确切大小，可以预分配
+  let mut preallocated = Vec::with_capacity(numbers.len());
+  for &x in &numbers {
+    preallocated.push(inline_double(x));
+  }
+  println!("预分配版本: {:?}", preallocated);
 }
 
 // 内联函数，减少函数调用开销
