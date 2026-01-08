@@ -351,9 +351,9 @@ pub fn advanced_tuple_usage() {
     println!("\n=== 元组的高级应用场景 ===");
 
     // 9.1 错误处理中的应用
-    fn divide_with_remainder(dividend: i32, divisor: i32) -> Result<(i32, i32), String> {
+    fn divide_with_remainder(dividend: i32, divisor: i32) -> Result<(i32, i32), &'static str> {
         if divisor == 0 {
-            Err("除数不能为零".to_string())
+            Err("除数不能为零")
         } else {
             Ok((dividend / divisor, dividend % divisor))
         }
@@ -533,20 +533,20 @@ pub fn tuple_best_practices() {
     println!("\n5. 错误处理模式:");
 
     // 好的模式：结合 Result 使用
-    fn parse_coordinate(input: &str) -> Result<(f64, f64), String> {
+    fn parse_coordinate(input: &str) -> Result<(f64, f64), &'static str> {
         let parts: Vec<&str> = input.split(',').collect();
         if parts.len() != 2 {
-            return Err("格式错误：需要两个坐标值".to_string());
+            return Err("格式错误：需要两个坐标值");
         }
 
         let x = parts[0]
             .trim()
             .parse::<f64>()
-            .map_err(|_| "X坐标解析失败".to_string())?;
+            .map_err(|_| "X坐标解析失败")?;
         let y = parts[1]
             .trim()
             .parse::<f64>()
-            .map_err(|_| "Y坐标解析失败".to_string())?;
+            .map_err(|_| "Y坐标解析失败")?;
 
         Ok((x, y))
     }

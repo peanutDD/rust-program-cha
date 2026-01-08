@@ -490,11 +490,12 @@ fn hashmap_performance_analysis() {
 fn capacity_preallocation_test() {
     const SIZE: usize = 50000;
 
+    // ✅ 优化：使用数字作为值，避免 String 分配（性能测试）
     // 不预分配容量
     let start = Instant::now();
     let mut map1 = HashMap::new();
     for i in 0..SIZE {
-        map1.insert(i, i.to_string());
+        map1.insert(i, i * 2); // 使用数字而不是 String
     }
     let duration1 = start.elapsed();
 
@@ -502,9 +503,22 @@ fn capacity_preallocation_test() {
     let start = Instant::now();
     let mut map2 = HashMap::with_capacity(SIZE);
     for i in 0..SIZE {
-        map2.insert(i, i.to_string());
+        map2.insert(i, i * 2); // 使用数字而不是 String
     }
     let duration2 = start.elapsed();
+    
+    // 如果需要测试 String 性能，使用单独的测试
+    #[allow(dead_code)]
+    fn test_string_insertion() {
+        const SIZE: usize = 50000;
+        let start = Instant::now();
+        let mut map = HashMap::with_capacity(SIZE);
+        for i in 0..SIZE {
+            map.insert(i, i.to_string());
+        }
+        let duration = start.elapsed();
+        println!("String 插入耗时: {:?}", duration);
+    }
 
     println!("不预分配: {:?}", duration1);
     println!("预分配: {:?}", duration2);

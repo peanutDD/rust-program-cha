@@ -603,7 +603,9 @@ fn type_conversions() {
 
   // 字符转字符串
   let ch = '世';
-  let char_to_string = ch.to_string();
+  // ✅ 优化：使用 format! 或直接使用字符（根据需求）
+  let char_to_string = ch.to_string(); // 需要 String 时使用
+  // 如果只需要显示，可以直接使用字符：println!("{}", ch);
   println!("字符 '{}' 转字符串: \"{}\"", ch, char_to_string);
 
   // From/Into trait 示例 <mcreference link="https://practice-zh.course.rs/type-conversions/from-into.html" index="5">5</mcreference>

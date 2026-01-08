@@ -4,11 +4,11 @@
 //! 提供全面、深入的所有权、借用和闭包学习材料
 
 mod advanced_ownership_examples;
-mod ownership_comprehensive_guide;
+mod comprehensive_guide;
 mod ownership_exercises;
 
 use advanced_ownership_examples::{common_ownership_solutions, demonstrate_real_world_ownership};
-use ownership_comprehensive_guide::comprehensive_ownership_guide;
+use comprehensive_guide::comprehensive_ownership_guide;
 use ownership_exercises::{challenge_exercises, run_all_exercises};
 
 fn main() {

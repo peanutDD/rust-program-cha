@@ -88,7 +88,7 @@ pub fn option_examples() {
         "x 的值: {}",
         match x {
             Some(i) => i.to_string(),
-            None => "无值".to_string(),
+            None => "无值".to_string(), // 需要 String 类型
         }
     );
 
@@ -96,7 +96,7 @@ pub fn option_examples() {
         "y 的值: {}",
         match y {
             Some(i) => i.to_string(),
-            None => "无值".to_string(),
+            None => "无值".to_string(), // 需要 String 类型
         }
     );
 
@@ -558,7 +558,7 @@ impl CalculatorOp {
             CalculatorOp::Power(base, exp) => CalculatorResult::Success(base.powf(*exp)),
             CalculatorOp::SquareRoot(n) => {
                 if *n < 0.0 {
-                    CalculatorResult::Error("负数不能开平方根".to_string())
+                    CalculatorResult::Error("负数不能开平方根".to_string()) // 需要 String 时保留
                 } else {
                     CalculatorResult::Success(n.sqrt())
                 }

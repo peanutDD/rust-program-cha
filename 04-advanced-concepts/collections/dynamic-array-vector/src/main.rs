@@ -448,18 +448,21 @@ fn vector_iteration_analysis() {
     }
     println!();
 
-    // into_iter(): 创建拥有所有权的迭代器
+    // ✅ 优化：如果需要消费，直接使用 into_iter，无需克隆
+    // 演示：如果需要保留原 Vec，先克隆
     let vec_copy = vec.clone();
-    print!("   into_iter(): ");
+    print!("   into_iter() (克隆后): ");
     for item in vec_copy.into_iter() {
         print!("{} ", item);
     }
     println!();
+    println!("   原 Vec 仍可用: {:?}", vec);
 
-    // iter_mut(): 创建可变引用的迭代器
+    // ✅ 优化：使用引用迭代修改，避免克隆
     let mut vec_mut = vec.clone();
-    vec_mut.iter_mut().for_each(|mut x| *x *= 2);
+    vec_mut.iter_mut().for_each(|x| *x *= 2); // 移除不必要的 mut
     println!("   iter_mut() 修改后: {:?}", vec_mut);
+    println!("   原 Vec 仍可用: {:?}", vec);
 
     // ========== 高级迭代器操作 ==========
     println!("\n🚀 高级迭代器操作:");

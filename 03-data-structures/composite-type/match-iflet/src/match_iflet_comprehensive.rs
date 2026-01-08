@@ -617,11 +617,11 @@ pub mod practical_examples {
             }
         }
 
-        pub fn validate(&self) -> Result<(), String> {
+        pub fn validate(&self) -> Result<(), &'static str> {
             match (&self.database_url, &self.port) {
-                (None, _) => Err("数据库 URL 是必需的".to_string()),
-                (Some(url), _) if url.is_empty() => Err("数据库 URL 不能为空".to_string()),
-                (Some(_), Some(port)) if *port < 1024 => Err("端口号不能小于 1024".to_string()),
+                (None, _) => Err("数据库 URL 是必需的"),
+                (Some(url), _) if url.is_empty() => Err("数据库 URL 不能为空"),
+                (Some(_), Some(port)) if *port < 1024 => Err("端口号不能小于 1024"),
                 _ => Ok(()),
             }
         }

@@ -163,9 +163,13 @@ Rust 的复合类型与模式匹配机制。
 
 ### 🔄 项目状态
 
-- **[重构状态](./REFACTORING_STATUS.md)** - 项目重构进度
-- **[重构计划](./REFACTORING_PLAN.md)** - 详细的重构计划
-- **[重构总结](./REFACTORING_SUMMARY.md)** - 重构成果总结
+- **[重构状态](./docs/development/REFACTORING_STATUS.md)** - 项目重构进度
+- **[重构计划](./docs/development/REFACTORING_PLAN.md)** - 详细的重构计划
+- **[重构总结](./docs/development/REFACTORING_SUMMARY.md)** - 重构成果总结
+
+### 📝 开发文档
+
+如需查看开发过程中的详细文档（重构计划、代码分析等），请查看 [开发文档目录](./docs/development/)。
 
 ## 🛠️ 工具和配置
 

@@ -19,16 +19,24 @@ fn demo_code_organization() {
 
     let numbers = vec![1, 2, 3, 4, 5];
 
-    // 好的做法：简洁的闭包
+    // ✅ 好的做法：简洁的闭包，使用引用迭代
     let doubled: Vec<i32> = numbers.iter().map(|&x| x * 2).collect();
     println!("简洁闭包结果: {:?}", doubled);
+    println!("原数组仍可用: {:?}", numbers);
 
-    // 复杂逻辑提取为函数
+    // ✅ 复杂逻辑提取为函数（提高可读性和可测试性）
     let processed: Vec<i32> = numbers
         .iter()
         .map(|&x| complex_processing(x))
         .collect();
     println!("复杂处理结果: {:?}", processed);
+    
+    // ✅ 性能提示：如果只需要最终结果，考虑直接计算
+    let sum_optimized: i32 = numbers
+        .iter()
+        .map(|&x| complex_processing(x))
+        .sum(); // 直接求和，无需中间 Vec
+    println!("优化版本（直接求和）: {}", sum_optimized);
 }
 
 fn complex_processing(x: i32) -> i32 {

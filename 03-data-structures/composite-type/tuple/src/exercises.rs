@@ -270,9 +270,9 @@ pub fn exercise_6_error_handling() {
     println!("\n=== 练习6：错误处理和选项类型 ===");
 
     // TODO: 实现安全的除法函数
-    fn safe_divide(dividend: f64, divisor: f64) -> Result<(f64, f64), String> {
+    fn safe_divide(dividend: f64, divisor: f64) -> Result<(f64, f64), &'static str> {
         if divisor == 0.0 {
-            Err("除数不能为零".to_string())
+            Err("除数不能为零")
         } else {
             let quotient = dividend / divisor;
             let remainder = dividend % divisor;
@@ -783,9 +783,9 @@ mod tests {
 
     #[test]
     fn test_error_handling() {
-        fn safe_divide(a: f64, b: f64) -> Result<f64, String> {
+        fn safe_divide(a: f64, b: f64) -> Result<f64, &'static str> {
             if b == 0.0 {
-                Err("Division by zero".to_string())
+                Err("Division by zero")
             } else {
                 Ok(a / b)
             }

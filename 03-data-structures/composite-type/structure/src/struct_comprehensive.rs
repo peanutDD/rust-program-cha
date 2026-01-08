@@ -636,27 +636,29 @@ impl Library {
         self.books.insert(book.isbn.clone(), book);
     }
 
-    pub fn borrow_book(&mut self, isbn: &str, borrower: String) -> Result<(), String> {
+    // ✅ 优化：使用 &'static str 作为错误消息
+    pub fn borrow_book(&mut self, isbn: &str, borrower: String) -> Result<(), &'static str> {
         match self.books.get_mut(isbn) {
             Some(book) if book.available => {
                 book.available = false;
                 self.borrowed_books.insert(isbn.to_string(), borrower);
                 Ok(())
             }
-            Some(_) => Err("图书已被借出".to_string()),
-            None => Err("图书不存在".to_string()),
+            Some(_) => Err("图书已被借出"),
+            None => Err("图书不存在"),
         }
     }
 
-    pub fn return_book(&mut self, isbn: &str) -> Result<(), String> {
+    // ✅ 优化：使用 &'static str 作为错误消息
+    pub fn return_book(&mut self, isbn: &str) -> Result<(), &'static str> {
         match self.books.get_mut(isbn) {
             Some(book) if !book.available => {
                 book.available = true;
                 self.borrowed_books.remove(isbn);
                 Ok(())
             }
-            Some(_) => Err("图书未被借出".to_string()),
-            None => Err("图书不存在".to_string()),
+            Some(_) => Err("图书未被借出"),
+            None => Err("图书不存在"),
         }
     }
 
